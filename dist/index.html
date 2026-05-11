@@ -1,0 +1,2150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Claude Codeを設計して使う — Slides</title>
+<style>
+/* ── Tokens ───────────────────────────────────────── */
+:root{
+  --brand:#e60012; --brand-deep:#a8000d; --brand-ink:#5a0007; --brand-tint:#fdecee;
+  --ink-900:#131311; --ink-700:#2d2b27; --ink-500:#6f6b62; --ink-400:#908a7e; --ink-300:#b8b2a5;
+  --paper:#faf9f7; --paper-card:#fff; --paper-sunk:#f1ede5; --paper-ink:#1a1916;
+  --rule:#e8e3d8; --rule-strong:#c9c2b3;
+  --ok:#0a7c52; --ok-tint:#e6f4ed; --warn:#9d7c00; --warn-tint:#fbf3d4;
+  --font-jp:"YakuHanJPs","Helvetica Neue","Hiragino Kaku Gothic ProN","Yu Gothic Medium","ヒラギノ角ゴ ProN W3",Meiryo,sans-serif;
+  --font-latin:"Helvetica Neue","Helvetica","Arial",sans-serif;
+  --font-mono:"SFMono-Regular","JetBrains Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1); --ease-emph:cubic-bezier(.16,1,.3,1);
+  --gutter:80px; --slide-max:1280px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;font-family:var(--font-jp);font-size:16px;color:var(--ink-700);background:var(--paper);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.7}
+a{color:inherit;text-decoration:none}
+a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* content links — brand color + underline (chrome links override locally) */
+a.link,#s4 .tier-cell a,#s55 .panel ul a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px;border-bottom:none}
+a.link:hover,#s4 .tier-cell a:hover,#s55 .qr .label a:hover,#s55 .panel ul a:hover{color:var(--brand);text-decoration-thickness:2px}
+::selection{background:var(--brand);color:#fff}
+code,pre,.mono{font-family:var(--font-mono)}
+.tabular{font-family:var(--font-latin);font-variant-numeric:tabular-nums lining-nums}
+img{display:block;max-width:100%}
+
+/* ── Header / Footer chrome ───────────────────────── */
+.deck-header{position:fixed;inset:0 0 auto 0;height:56px;display:grid;
+  grid-template-columns:1fr auto 1fr;align-items:center;padding:0 32px;
+  background:rgba(250,249,247,.92);backdrop-filter:blur(8px) saturate(1.1);
+  -webkit-backdrop-filter:blur(8px) saturate(1.1);border-bottom:1px solid var(--rule);z-index:30}
+.deck-header::before{content:"";position:absolute;inset:auto 0 -1px 0;height:2px;background:var(--brand);
+  width:var(--deck-progress,2%);transition:width .4s var(--ease-emph)}
+.deck-brand{display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600;
+  color:var(--ink-900);letter-spacing:.02em}
+.deck-brand-mark{width:18px;height:18px;background:var(--brand);position:relative;flex-shrink:0}
+.deck-brand-mark::after{content:"";position:absolute;inset:4px;background:var(--paper)}
+.deck-section-label{font-family:var(--font-latin);font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.18em;color:var(--ink-500);text-align:center}
+.deck-section-label::before{content:"";display:inline-block;width:6px;height:6px;background:var(--brand);
+  margin-right:10px;vertical-align:middle;transform:translateY(-1px)}
+.deck-nav{display:flex;justify-content:flex-end;align-items:center;gap:16px}
+.deck-nav a{font-family:var(--font-latin);font-size:12px;font-weight:500;letter-spacing:.06em;
+  color:var(--ink-500);padding:7px 14px;border:1px solid var(--rule-strong);border-radius:999px;
+  transition:all .15s var(--ease)}
+.deck-nav a:hover{color:var(--ink-900);border-color:var(--ink-900)}
+
+.deck-footer{position:fixed;inset:auto 0 0 0;height:56px;display:grid;
+  grid-template-columns:1fr auto 1fr;align-items:center;padding:0 32px;
+  background:var(--paper);border-top:1px solid var(--rule);z-index:30}
+.deck-footer-meta{font-family:var(--font-latin);font-size:11px;font-weight:500;letter-spacing:.12em;
+  color:var(--ink-400);text-transform:uppercase}
+.deck-footer-controls{display:flex;align-items:center;gap:8px;justify-self:center}
+.nav-button{background:transparent;border:1px solid var(--rule-strong);border-radius:999px;
+  width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+  font-family:var(--font-latin);font-size:14px;color:var(--ink-700);transition:all .15s var(--ease)}
+.nav-button:hover:not(:disabled){border-color:var(--ink-900);color:var(--ink-900);background:var(--paper-card)}
+.nav-button:disabled{opacity:.3;cursor:default}
+.slide-counter{font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-size:12px;
+  font-weight:600;letter-spacing:.08em;color:var(--ink-700);min-width:70px;text-align:center}
+.slide-counter .sep{color:var(--ink-300);margin:0 4px}
+.slide-counter .total{color:var(--ink-400)}
+.deck-footer-right{justify-self:end;font-family:var(--font-latin);font-size:11px;letter-spacing:.12em;
+  color:var(--ink-400);text-transform:uppercase;display:flex;align-items:center;gap:12px}
+.deck-footer-right kbd{font-family:var(--font-mono);font-size:10px;background:var(--paper-card);
+  border:1px solid var(--rule-strong);border-bottom-width:2px;border-radius:3px;padding:1px 6px;color:var(--ink-700)}
+
+/* ── Slide shell ──────────────────────────────────── */
+.deck{padding-top:56px;padding-bottom:56px;height:100vh;overflow:hidden;position:relative}
+.slide{display:none;position:absolute;inset:56px 0 56px 0;overflow:hidden}
+.slide.is-active{display:flex;flex-direction:column}
+.slide.is-active .slide-inner{animation:enter .42s var(--ease-emph) both}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.slide-inner{flex:1;display:flex;flex-direction:column;max-width:var(--slide-max);width:100%;margin:0 auto;padding:48px var(--gutter) 38px;gap:8px;position:relative;min-height:0}
+
+/* Common typographic atoms */
+.kicker{font-family:var(--font-latin);font-size:11px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--brand);display:inline-flex;align-items:center;gap:10px;
+  align-self:flex-start;margin-top:4px}
+.kicker::before{content:"";display:inline-block;width:18px;height:1px;background:var(--brand)}
+.body{font-size:15px;line-height:1.75;color:var(--ink-700)}
+.body strong{color:var(--ink-900);font-weight:700}
+.body code{background:var(--paper-sunk);border:1px solid var(--rule);border-radius:3px;
+  padding:1px 6px;font-size:.86em;color:var(--brand-ink)}
+
+/* generic table */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;border:1px solid var(--rule);background:var(--paper-card)}
+.tbl td{padding:11px 16px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);text-align:left;vertical-align:top;line-height:1.6}
+.tbl th:last-child,.tbl td:last-child{border-right:none}
+.tbl tr:last-child td{border-bottom:none}
+.tbl th{padding:11px 16px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);text-align:left;vertical-align:top;line-height:1.6;background:var(--paper-sunk);color:var(--ink-900);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+
+/* card */
+.card{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+
+/* speaker notes */
+.notes{display:none}
+
+/* tag pill */
+.pill{display:inline-flex;align-items:center;gap:8px;padding:4px 11px;border:1px solid var(--rule-strong);
+  border-radius:999px;font-family:var(--font-latin);font-size:11px;font-weight:600;
+  letter-spacing:.08em;color:var(--ink-500);background:var(--paper-card)}
+.pill.red{color:var(--brand);border-color:var(--brand)}
+.pill.ink{background:var(--ink-900);color:var(--paper);border-color:var(--ink-900)}
+
+/* ────────────────────────────────────────────────── */
+
+/* Slide-specific styles — each slide gets its own ID */
+
+/* ────────────────────────────────────────────────── */
+
+/* S1 — Title hero */
+#s1 .slide-inner{justify-content:center;padding-top:48px}
+#s1::before{content:"";position:absolute;top:0;right:0;bottom:0;width:50%;
+  background:linear-gradient(180deg,#faf9f7 0%,#f5efe6 100%);z-index:0}
+#s1 .slide-inner > *{position:relative;z-index:1}
+#s1 .hero-org{font-size:13px;color:var(--ink-500);letter-spacing:.2em;text-transform:uppercase;font-family:var(--font-latin)}
+#s1 .hero-title{font-weight:800;letter-spacing:-.01em;color:var(--ink-900);font-size:72px;line-height:1.06}
+#s1 .hero-mark{background:var(--brand);position:relative;flex-shrink:0;box-shadow:0 12px 32px -16px var(--brand);width:96px;height:96px}
+#s1 .hero-mark::after{content:"";position:absolute;background:var(--paper);inset:20px}
+#s1 .hero-block{display:grid;grid-template-columns:auto 1fr;gap:36px;margin-top:0;align-items:center}
+#s1 .hero-sub{color:var(--ink-500);letter-spacing:.04em;margin-top:18px;font-size:17px}
+#s1 .hero-meta{border-top:1px solid var(--rule);display:flex;align-items:baseline;gap:32px;margin-top:32px;padding-top:18px}
+#s1 .hero-date{font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-900);letter-spacing:.08em;font-size:20px}
+#s1::after{content:"01 / 03";position:absolute;right:var(--gutter);font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-size:11px;letter-spacing:.22em;color:var(--ink-400);z-index:2;top:30px}
+
+/* S2 — Two-column: goals / prerequisites */
+#s2 .col{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:24px 26px;position:relative}
+#s2 .col::before{content:"";position:absolute;top:0;left:0;width:48px;height:3px;background:var(--brand)}
+#s2 .col-label{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brand);margin-bottom:14px;display:block}
+#s2 .col h3{font-size:18px;font-weight:700;color:var(--ink-900);margin-bottom:12px;letter-spacing:.005em}
+#s2 .col ul{list-style:none;padding:0}
+#s2 .col li{font-size:14.5px;line-height:1.7;padding-left:22px;position:relative;margin:8px 0;color:var(--ink-700)}
+#s2 .col li::before{content:"";position:absolute;left:0;top:.7em;width:10px;height:1px;background:var(--brand)}
+
+/* S3 — 3 cards horizontal: 困りごと → 今日のテーマ */
+#s3 .flow-arrow{font-family:var(--font-latin);font-size:16px;color:var(--ink-300);align-self:center}
+#s3 .flow-card{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;padding:18px 20px;gap:10px}
+#s3 .flow-card .n{font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:800;color:var(--brand);line-height:1;letter-spacing:-.02em;font-size:28px}
+#s3 .flow-pain{color:var(--ink-700);line-height:1.6;font-weight:500;font-size:13.5px}
+#s3 .flow-theme{font-weight:700;color:var(--ink-900);line-height:1.5;border-top:1px solid var(--rule);font-size:14px;padding-top:10px}
+
+/* S4 — Evidence table (trust tiers) */
+#s4 .tier-h{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;background:var(--paper-sunk);padding:12px 16px;color:var(--ink-900);
+  border-bottom:2px solid var(--ink-900)}
+#s4 .tier-cell{padding:18px 16px;border-bottom:1px solid var(--rule);font-size:14px;line-height:1.6;color:var(--ink-700)}
+#s4 .tier-cell.lvl{font-family:var(--font-latin);font-weight:700;letter-spacing:.04em}
+#s4 .tier-cell:not(:nth-last-child(-n+4)){border-right:1px solid var(--rule)}
+#s4 .lvl-dot{display:inline-flex;align-items:center;gap:8px}
+#s4 .lvl-dot::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--brand)}
+#s4 .lvl-dot.mid::before{background:var(--warn)}
+#s4 .lvl-dot.aux::before{background:var(--ink-300)}
+#s4 .tier-cell:nth-last-child(-n+4){border-bottom:none;border-right:1px solid var(--rule)}
+
+/* S5, S18, S36 — Section divider (chapter intro) */
+.section-slide .section-eyebrow{font-family:var(--font-latin);font-size:13px;font-weight:700;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-500);margin-bottom:18px}
+
+/* S6 — situational questions checklist */
+#s6 .qrow .qn{font-family:var(--font-latin);font-size:24px;font-weight:800;color:var(--brand);
+  line-height:1;font-variant-numeric:tabular-nums}
+#s6 .qrow .qmark{font-family:var(--font-latin);font-size:18px;font-weight:700;color:var(--brand);
+  margin-left:8px}
+#s6 .qlist{display:flex;flex-direction:column;margin-top:22px;gap:10px}
+#s6 .qrow{display:grid;grid-template-columns:48px 1fr;gap:20px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:13px 20px}
+#s6 .qrow .qt{color:var(--ink-900);font-weight:600;letter-spacing:.01em;font-size:16px}
+#s6 .takeaway{background:var(--paper-ink);color:#f5f0e6;border-radius:6px;line-height:1.7;border-left:3px solid var(--brand);margin-top:18px;padding:14px 22px;font-size:14px}
+
+/* S7 — 3 KPI lanes */
+#s7 .lane-label{font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--brand)}
+#s7 .lane-rule{width:48px;height:2px;background:var(--brand)}
+#s7 .lane:nth-child(2){background:var(--paper-sunk)}
+#s7 .lane:nth-child(3){background:var(--paper-ink);color:#f0ebe0}
+#s7 .lane:nth-child(3) .lane-title{color:#fff}
+#s7 .lane:nth-child(3) .lane-body{color:#c4b9a5}
+#s7 .lane:nth-child(3) .lane-rule{background:#fff}
+#s7 .lane{border:1px solid var(--rule);border-radius:6px;background:var(--paper-card);display:flex;flex-direction:column;position:relative;min-height:0;padding:20px;gap:12px}
+#s7 .lane-title{font-weight:700;color:var(--ink-900);line-height:1.4;letter-spacing:.005em;font-size:20px}
+#s7 .lane-body{color:var(--ink-500);line-height:1.65;margin-top:auto;font-size:13.5px}
+
+/* S8 — process: settings.json + CLAUDE.md + rules → context */
+#s8 .inputs{display:flex;flex-direction:column;gap:10px}
+#s8 .arrow-col{display:flex;align-items:center;justify-content:center}
+#s8 .arrow-col svg{width:64px;height:64px;color:var(--ink-400)}
+#s8 .out-label{font-family:var(--font-latin);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#c4b9a5}
+#s8 .out-bullets li{list-style:none;padding-left:18px;position:relative}
+#s8 .out-bullets li::before{content:"";position:absolute;left:0;top:.65em;width:10px;height:1px;background:var(--brand)}
+#s8 .pipe{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;margin-top:22px;gap:20px}
+#s8 .inputs .ip{background:var(--paper-card);border:1px solid var(--rule);border-left:3px solid var(--brand);border-radius:4px;padding:12px 16px}
+#s8 .ip-name{font-family:var(--font-mono);color:var(--brand-ink);font-weight:600;font-size:12.5px}
+#s8 .ip-desc{color:var(--ink-500);margin-top:4px;line-height:1.55;font-size:12.5px}
+#s8 .output{background:var(--ink-900);color:#f5f0e6;border-radius:6px;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:20px 22px}
+#s8 .out-title{font-weight:700;line-height:1.4;font-size:20px}
+#s8 .out-bullets{line-height:1.7;color:#d8d0bd;margin-top:10px;font-size:12.5px}
+
+/* S9 — lifespan table */
+#s9 .ls .ls-name{font-family:var(--font-mono);font-size:13px;color:var(--brand-ink);font-weight:700}
+#s9 .ls .ls-when{font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-500);margin-top:6px}
+#s9 .ls .ls-life{margin-top:auto;display:flex;align-items:center;gap:6px;
+  font-family:var(--font-latin);font-size:10px;letter-spacing:.12em;color:var(--ink-400);text-transform:uppercase;
+  padding-top:10px;border-top:1px solid var(--rule)}
+#s9 .ls .ls-life .bar{flex:1;height:3px;background:var(--rule);border-radius:2px;overflow:hidden;position:relative}
+#s9 .ls .ls-life .bar::after{content:"";position:absolute;left:0;top:0;bottom:0;background:var(--brand);width:var(--w,30%)}
+#s9 .ls{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;min-height:0;padding:16px 16px;gap:6px}
+#s9 .ls .ls-for{color:var(--ink-900);font-weight:600;line-height:1.5;font-size:14px;margin-top:6px}
+
+/* S10 — 3 stacked role cards */
+#s10 .role-tag{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--brand);
+  background:var(--brand-tint);padding:4px 10px;border-radius:3px;align-self:flex-start;letter-spacing:.02em}
+#s10 .role ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+#s10 .role li::before{content:"";position:absolute;left:0;top:.7em;width:8px;height:1px;background:var(--brand)}
+#s10 .axiom em{color:var(--brand);font-style:normal}
+#s10 .roles{display:grid;grid-template-columns:repeat(3,1fr);flex:1;min-height:0;margin-top:22px;gap:14px}
+#s10 .role{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;padding:18px 18px;gap:10px;overflow:visible}
+#s10 .role h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;line-height:1.4;font-size:16px}
+#s10 .role li{line-height:1.6;color:var(--ink-700);padding-left:18px;position:relative;font-size:13px}
+#s10 .axiom{text-align:center;font-weight:700;color:var(--ink-900);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);letter-spacing:.02em;margin:18px 0 0;padding:10px 0;font-size:16px}
+
+/* S11 — natural vs mechanical control */
+#s11 .mh{padding:14px 18px;background:var(--paper-sunk);border-bottom:2px solid var(--ink-900);
+  font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-900)}
+#s11 .mc:nth-child(3n){border-right:none}
+#s11 .mc.lbl{font-family:var(--font-mono);font-size:13px;color:var(--brand-ink);font-weight:700;background:var(--paper-sunk)}
+#s11 .mc:nth-last-child(-n+3){border-bottom:none}
+#s11 .matrix{display:grid;grid-template-columns:160px 1fr 1fr;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:22px}
+#s11 .mc{border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);line-height:1.7;color:var(--ink-700);padding:14px 16px;font-size:14px}
+
+/* S12 — 3 design principles */
+#s12 .prin-ex{margin-top:auto;display:flex;flex-direction:column;gap:6px;width:100%;padding-top:14px;border-top:1px dashed var(--rule);text-align:left}
+#s12 .prin-ex span{font-size:12.5px;line-height:1.55;padding-left:22px;position:relative}
+#s12 .prin-ex .ng{color:var(--ink-400);text-decoration:line-through;text-decoration-color:var(--rule-strong)}
+#s12 .prin-ex .ng::before{content:"NG";position:absolute;left:0;top:0;font-family:var(--font-latin);font-size:9.5px;font-weight:700;color:var(--ink-400);letter-spacing:.1em}
+#s12 .prin-ex .ok{color:var(--ink-900);font-weight:600}
+#s12 .prin-ex .ok::before{content:"OK";position:absolute;left:0;top:0;font-family:var(--font-latin);font-size:9.5px;font-weight:700;color:var(--brand);letter-spacing:.1em}
+#s12 .prin-ex code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.9em}
+#s12 .principles{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;gap:14px}
+#s12 .prin{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;text-align:center;display:flex;flex-direction:column;align-items:center;min-height:0;padding:26px 22px;gap:12px}
+#s12 .prin .glyph{font-family:var(--font-latin);font-weight:800;color:var(--brand);line-height:1;letter-spacing:-.04em;font-size:52px}
+#s12 .prin h3{font-weight:700;color:var(--ink-900);letter-spacing:.01em;font-size:20px}
+#s12 .prin p{color:var(--ink-500);line-height:1.65;font-size:13px}
+
+/* S13 — Bad/Good side by side */
+#s13 .col.bad{background:var(--paper-sunk)}
+#s13 .col.good{background:var(--paper-card);border-color:var(--ink-900);border-width:1.5px}
+#s13 .col .label{display:flex;align-items:center;gap:10px;font-family:var(--font-latin);font-size:12px;
+  font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+#s13 .col.bad .label{color:var(--ink-400)}
+#s13 .col.bad .label::before{content:"×";display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;background:var(--ink-300);color:#fff;border-radius:50%;font-size:13px;letter-spacing:0}
+#s13 .col.good .label{color:var(--brand)}
+#s13 .col.good .label::before{content:"○";display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;background:var(--brand);color:#fff;border-radius:50%;font-size:13px;letter-spacing:0}
+#s13 .col ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+#s13 .col.good li{border-left:3px solid var(--brand);font-weight:500;color:var(--ink-900)}
+#s13 .col.good li code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.9em;color:var(--brand-ink);font-weight:600}
+#s13 .col.bad li{color:var(--ink-500);text-decoration:line-through;text-decoration-color:var(--ink-300)}
+#s13 .col .ba-why{margin-top:6px;font-size:12.5px;color:var(--ink-500);line-height:1.55;letter-spacing:.005em}
+#s13 .ba{display:grid;grid-template-columns:1fr 1fr;margin-top:22px;gap:18px}
+#s13 .col{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;position:relative;display:flex;flex-direction:column;padding:20px 22px;gap:12px}
+#s13 .col li{line-height:1.5;border:1px solid var(--rule);border-radius:4px;background:var(--paper);font-size:14.5px;padding:10px 13px}
+
+/* S14 — placement table */
+#s14 .place{margin-top:28px}
+
+/* S15 — exercise table */
+#s15 .options-bar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 18px}
+#s15 .options-bar .pill{font-family:var(--font-mono);font-size:12px}
+#s15 .tbl tbody td:first-child{font-family:var(--font-latin);font-weight:700;color:var(--brand);
+  font-variant-numeric:tabular-nums;text-align:center}
+#s15 .tbl tbody td:last-child{font-family:var(--font-mono);color:var(--ink-400);text-align:center;font-size:18px}
+#s15 .slide-inner{gap:6px}
+#s15 .tags{margin-top:8px;gap:8px}
+#s15 .tag{padding:6px 14px;font-size:13px}
+#s15 .tbl-wrap{margin-top:14px}
+#s15 .tbl{font-size:13.5px}
+#s15 .tbl th{padding:9px 14px;font-size:11.5px}
+#s15 .tbl td{padding:10px 14px;line-height:1.4}
+#s15 .tbl td:first-child{font-size:14px}
+#s15 .tbl tr{height:auto}
+
+/* S16 — answer table */
+#s16 .options-bar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 18px}
+#s16 .options-bar .pill{font-family:var(--font-mono);font-size:12px}
+#s16 .tbl tbody td:first-child{font-family:var(--font-latin);font-weight:700;color:var(--brand);
+  font-variant-numeric:tabular-nums;text-align:center}
+#s16 .tbl tbody td:nth-child(3){font-family:var(--font-mono);font-size:12.5px;color:var(--brand-ink);font-weight:600}
+#s16 .tbl tbody td:nth-child(3) code{background:transparent;border:none;padding:0;color:inherit}
+
+/* S17 — workshop steps */
+#s17 .step .step-cue{margin-top:8px;padding-left:14px;border-left:2px solid var(--brand);color:var(--ink-700);font-size:12.5px;line-height:1.55}
+#s17 .step .step-cue code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+#s17 .steps{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+#s17 .step{display:grid;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;align-items:center;padding:14px 20px;gap:18px;grid-template-columns:54px 1fr}
+#s17 .step .n{font-family:var(--font-latin);font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em;font-size:34px}
+#s17 .step h3{font-weight:700;color:var(--ink-900);letter-spacing:.01em;line-height:1.45;font-size:16.5px}
+#s17 .step p{color:var(--ink-500);line-height:1.6;font-size:12.5px;margin-top:4px}
+
+/* S19 — observation pile (situational) */
+#s19 .pile .obs .q{font-family:var(--font-latin);font-size:14px;color:var(--brand);font-weight:700;font-style:italic}
+#s19 .floating{position:absolute;right:var(--gutter);top:120px;font-family:var(--font-latin);font-size:96px;
+  font-weight:800;color:var(--rule);line-height:.9;letter-spacing:-.04em;z-index:0;pointer-events:none}
+#s19 .pile{display:grid;grid-template-columns:1fr;max-width:780px;margin-top:22px;gap:6px}
+#s19 .pile .obs{display:grid;grid-template-columns:24px 1fr;gap:16px;align-items:baseline;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;padding:11px 18px}
+#s19 .pile .obs .t{color:var(--ink-900);font-weight:500;letter-spacing:.005em;font-size:15px}
+
+/* S20 — Q triplet */
+#s20 .tri-cap{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
+#s20 .tri-lead{font-size:13px;color:var(--ink-500);line-height:1.6;margin:-2px 0 4px}
+#s20 .tri-lead code{font-family:var(--font-mono);font-size:.92em;background:var(--paper-sunk);padding:1px 4px;border-radius:2px}
+#s20 .tri ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:5px}
+#s20 .tri li{font-size:13.5px;color:var(--ink-700);line-height:1.55;padding-left:18px;position:relative}
+#s20 .tri li::before{content:"";position:absolute;left:0;top:.7em;width:10px;height:1px;background:var(--brand)}
+#s20 .tri-fix{margin-top:auto;padding-top:12px;border-top:1px dashed var(--rule);font-size:12.5px;color:var(--ink-900);font-weight:600;letter-spacing:.005em}
+#s20 .tri-fix code{font-family:var(--font-mono);font-size:.92em;color:var(--brand-ink);background:var(--brand-tint);padding:1px 5px;border-radius:2px}
+#s20 .triple{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;gap:14px}
+#s20 .tri{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;gap:10px;padding:20px 20px}
+#s20 .tri h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:21px;margin-bottom:10px}
+
+/* S21 — initial weight chart */
+#s21 .wc:nth-child(3n){border-right:none}
+#s21 .wc.lbl{font-family:var(--font-mono);font-size:13px;color:var(--brand-ink);font-weight:700;background:var(--paper-sunk)}
+#s21 .wc:nth-last-child(-n+3){border-bottom:none}
+#s21 .meter{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+#s21 .meter .bar{width:100%;height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+#s21 .meter .bar > i{display:block;height:100%;background:var(--brand)}
+#s21 .meter span{font-family:var(--font-latin);font-size:11px;font-weight:700;color:var(--brand);letter-spacing:.04em;font-variant-numeric:tabular-nums;text-align:right}
+#s21 .weight{display:grid;grid-template-columns:200px 540px 1fr;gap:0;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:18px}
+#s21 .wh{background:var(--paper-sunk);border-bottom:2px solid var(--ink-500);font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-900);padding:11px 16px}
+#s21 .wc{border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);line-height:1.6;color:var(--ink-700);padding:14px 16px;font-size:13.5px}
+#s21 .footnote{color:var(--ink-400);font-style:italic;margin-top:12px;font-size:11.5px}
+
+/* S22 — Deferred Tools flow */
+#s22 .title.md{font-size:26px;max-width:1100px}
+#s22 .deferred{display:flex;flex-direction:column;max-width:880px;margin-top:14px;gap:5px}
+#s22 .stage{display:grid;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;position:relative;padding:11px 18px;gap:14px;grid-template-columns:54px 1fr}
+#s22 .stage .num{font-family:var(--font-latin);font-weight:800;color:var(--brand);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;font-size:24px}
+#s22 .stage h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:14.5px}
+#s22 .stage p{color:var(--ink-500);font-size:11.5px;line-height:1.55;margin-top:1px}
+#s22 .principle{background:var(--paper-ink);color:#f5f0e6;border-radius:6px;display:flex;align-items:center;gap:14px;max-width:880px;margin-top:12px;padding:11px 18px}
+#s22 .principle .text{font-weight:600;color:#fff;font-size:14px}
+#s22 .principle .label{font-family:var(--font-latin);letter-spacing:.22em;text-transform:uppercase;color:var(--brand);background:rgba(255,255,255,.06);border-radius:3px;font-size:9.5px;padding:3px 8px}
+
+/* S23 — stacking conversation */
+#s23 .stack .ln .role{font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
+#s23 .stack .ln.tool .role{color:var(--ink-500)}
+#s23 .stack .ln.tool{background:var(--paper-sunk);color:var(--ink-500)}
+#s23 .stack .ln .text{color:var(--ink-900);font-family:var(--font-mono)}
+#s23 .stack .ln.tool .text{color:var(--ink-500);font-style:italic}
+#s23 .ellipsis{padding:8px 0 8px 100px;color:var(--ink-400);letter-spacing:.4em}
+#s23 .title.md{font-size:26px;max-width:1100px}
+#s23 .stack{display:flex;flex-direction:column;max-width:760px;font-family:var(--font-mono);margin-top:14px;gap:4px}
+#s23 .stack .ln{display:grid;grid-template-columns:90px 1fr;gap:14px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;padding:7px 14px;font-size:12px;line-height:1.4}
+#s23 .stack-cap{color:var(--ink-500);line-height:1.7;max-width:680px;margin-top:10px;font-size:12.5px}
+
+/* S24 — microcompact */
+#s24 .tl-wrap{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:stretch}
+#s24 .tl-axis{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0}
+#s24 .tl-axis .ax-top{font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--ink-400);text-transform:uppercase;writing-mode:horizontal-tb;white-space:nowrap}
+#s24 .tl-axis .ax-bot{font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;writing-mode:horizontal-tb;white-space:nowrap;color:var(--brand)}
+#s24 .tl-axis .ax-line{flex:1;width:1px;background:linear-gradient(to bottom,var(--ink-300),var(--brand));position:relative;min-height:120px}
+#s24 .tl-axis .ax-line::after{content:"";position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--brand)}
+#s24 .timeline{display:flex;flex-direction:column;gap:4px;min-width:0;width:380px}
+#s24 .tl-item.del{background:var(--paper-sunk);color:var(--ink-300);text-decoration:line-through;
+  text-decoration-color:var(--brand);text-decoration-thickness:2px}
+#s24 .tl-item .when{font-family:var(--font-latin);font-size:10px;letter-spacing:.14em;color:var(--ink-400);text-transform:uppercase}
+#s24 .tl-item.del .when{color:var(--brand)}
+#s24 .mc-cap strong{font-weight:800;color:var(--ink-900)}
+#s24 .mc-cap code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 6px;border-radius:3px;font-size:.85em;color:var(--brand-ink);border:1px solid var(--rule)}
+#s24 .mc-cap .hl{background:var(--brand-tint);padding:2px 8px;font-weight:700;color:var(--brand-ink);border-radius:2px}
+#s24 .mc-grid{display:grid;grid-template-columns:auto 1fr;align-items:start;margin-top:20px;gap:28px}
+#s24 .tl-item{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);font-size:11.5px;padding:8px 14px}
+#s24 .mc-cap{line-height:1.8;color:var(--ink-900);font-weight:500;font-size:13.5px}
+
+/* S25 — Auto-compact */
+#s25 .panel.before{position:relative}
+#s25 .panel.after{background:var(--paper-sunk);position:relative}
+#s25 .panel-h{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);margin-bottom:14px}
+#s25 .panel-l{display:flex;flex-direction:column;gap:6px;font-family:var(--font-mono);font-size:12px}
+#s25 .panel-l .ln{padding:6px 10px;background:var(--paper);border:1px solid var(--rule);border-radius:3px;color:var(--ink-700)}
+#s25 .panel-l .ln.faded{color:var(--ink-300);text-decoration:line-through}
+#s25 .panel-l .ln.summary{background:var(--ink-900);color:#f5f0e6;border-color:var(--ink-900)}
+#s25 .arrow-hint{position:absolute;left:-32px;top:50%;transform:translateY(-50%);color:var(--brand);font-size:22px;font-family:var(--font-latin)}
+#s25 .countermeasure::before{content:"対策";font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.2em;background:var(--brand);color:#fff;padding:4px 10px;border-radius:3px}
+#s25 .auto-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;gap:20px}
+#s25 .panel{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:18px 22px}
+#s25 .countermeasure{background:var(--paper-ink);color:#f5f0e6;border-radius:4px;line-height:1.7;display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 18px;font-size:13.5px}
+
+/* S26 — re-injection inventory */
+#s26 .inv-card.primary{background:var(--paper-ink);color:#f5f0e6}
+#s26 .inv-card.primary h3{color:#fff}
+#s26 .inv-card.primary p{color:#c4b9a5}
+#s26 .inv{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+#s26 .inv-row{display:grid;align-items:stretch;grid-template-columns:200px 1fr;gap:18px}
+#s26 .inv-row-tag{font-weight:700;letter-spacing:.005em;color:var(--brand);text-align:right;padding:18px 4px 0 0;line-height:1.45;display:block;font-size:16px;padding-top:14px}
+#s26 .inv-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#s26 .inv-card{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;justify-content:center;padding:14px 18px;gap:6px;min-height:100px}
+#s26 .inv-card h3{font-family:var(--font-mono);color:var(--brand-ink);font-weight:700;line-height:1.4;font-size:13px}
+#s26 .inv-card p{color:var(--ink-500);line-height:1.65;font-size:12.5px}
+
+/* S27 — bad autocompact (message slide) */
+#s27 .quote em{color:var(--brand);font-style:normal;background:linear-gradient(transparent 60%,var(--brand-tint) 60%)}
+#s27 .csq .lbl{font-family:var(--font-latin);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-400);margin-bottom:8px}
+#s27 .quote-wrap{max-width:880px;margin-top:22px}
+#s27 .quote{font-weight:700;color:var(--ink-900);letter-spacing:.005em;margin-top:8px;word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty;font-size:38px;line-height:1.32}
+#s27 .qmark{font-family:var(--font-latin);font-weight:800;color:var(--brand);line-height:.6;display:block;font-size:80px;height:36px}
+#s27 .consequences{display:grid;grid-template-columns:repeat(3,1fr);max-width:880px;margin-top:28px;gap:12px}
+#s27 .csq{background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;border-top:3px solid var(--brand);padding:20px 18px 40px}
+#s27 .csq .tx{color:var(--ink-900);font-weight:500;line-height:1.55;font-size:12.5px}
+
+/* S28 — Context Rot 3 causes */
+#s28 .rot::before{content:"";position:absolute;right:-20px;top:-20px;width:100px;height:100px;
+  border:2px solid var(--brand-tint);border-radius:50%}
+#s28 .rot::after{content:"";position:absolute;right:-50px;top:-50px;width:160px;height:160px;
+  border:1px solid var(--brand-tint);border-radius:50%}
+#s28 .rot .term{font-family:var(--font-latin);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--brand);text-transform:uppercase}
+#s28 .rots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+#s28 .rot{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:0;padding:22px 22px;gap:12px}
+#s28 .rot h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;position:relative;z-index:1;font-size:20px;line-height:1.32}
+#s28 .rot p{color:var(--ink-500);margin-top:auto;position:relative;z-index:1;font-size:13px;line-height:1.65}
+
+/* S29 — coding-specific rot */
+#s29 .ex .ico{font-family:var(--font-latin);font-size:18px;font-weight:800;color:var(--brand);line-height:1}
+#s29 .ex code{background:var(--paper-sunk);padding:1px 6px;border-radius:3px;font-size:.86em;color:var(--brand-ink)}
+#s29 .examples{display:flex;flex-direction:column;max-width:780px;gap:10px;margin-top:18px}
+#s29 .ex{display:grid;grid-template-columns:32px 1fr;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;border-left:3px solid var(--brand);padding:14px 20px;gap:16px}
+#s29 .ex .tx{color:var(--ink-900);font-weight:500;letter-spacing:.005em;font-size:15px;line-height:1.5}
+#s29 .punchline{color:var(--ink-900);font-weight:700;border-left:4px solid var(--ink-900);max-width:780px;letter-spacing:.005em;margin-top:18px;font-size:17px;padding-left:18px;line-height:1.45}
+
+/* S30 — checklist */
+#s30 .ck .box{width:22px;height:22px;border:2px solid var(--brand);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--brand);font-family:var(--font-latin);font-weight:800;font-size:12px;flex-shrink:0}
+#s30 .ck .box::after{content:"✓"}
+#s30 .ck .ck-when{display:block;margin-top:6px;font-size:12.5px;color:var(--ink-500);font-weight:400;line-height:1.55}
+#s30 .ck code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 6px;border-radius:3px;font-size:.86em;color:var(--brand-ink)}
+#s30 .checks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+#s30 .ck{display:grid;grid-template-columns:32px 1fr;align-items:start;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;padding:14px 18px;gap:14px}
+#s30 .ck .tx{color:var(--ink-900);font-weight:500;letter-spacing:.005em;line-height:1.5;font-size:15px}
+
+/* S31 — compact vs clear */
+#s31 .vp.compact{border-color:var(--brand);background:var(--brand-tint)}
+#s31 .vp .lbl{font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-500)}
+#s31 .vp ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-700)}
+#s31 .vp li::before{content:"";position:absolute;left:0;top:.7em;width:8px;height:1px;background:var(--brand)}
+#s31 .recipe::before{content:"EXAMPLE";font-family:var(--font-latin);font-size:10px;letter-spacing:.22em;color:var(--brand);display:block;margin-bottom:6px;font-weight:700}
+#s31 .vs{display:grid;grid-template-columns:1fr 60px 1fr;align-items:stretch;gap:0;margin-top:20px}
+#s31 .vp{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;padding:22px 24px;gap:10px}
+#s31 .vp .cmd{font-family:var(--font-mono);font-weight:700;color:var(--brand-ink);font-size:20px}
+#s31 .vp .verdict{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:17px;line-height:1.4}
+#s31 .vp li{padding-left:16px;position:relative;font-size:13px}
+#s31 .vs-mid{display:flex;align-items:center;justify-content:center;font-family:var(--font-latin);font-weight:700;color:var(--ink-400);letter-spacing:.18em;font-size:12.5px}
+#s31 .recipe{background:var(--ink-900);color:#f5f0e6;border-radius:4px;font-family:var(--font-mono);line-height:1.6;margin-top:16px;padding:12px 18px;font-size:12.5px}
+
+/* S32 — branching commands */
+#s32 .guide-flow{margin-top:22px;padding:18px 24px;background:var(--paper-sunk);border-radius:6px;border-left:3px solid var(--brand);display:grid;grid-template-columns:auto 1fr;gap:8px 24px;align-items:baseline}
+#s32 .guide-flow .gf-q{grid-row:1 / span 4;font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);align-self:start;padding-top:4px}
+#s32 .guide-flow .gf-row{display:grid;grid-template-columns:1fr 24px auto;gap:14px;align-items:baseline;font-size:13.5px}
+#s32 .guide-flow .gf-if{color:var(--ink-700)}
+#s32 .guide-flow .gf-arrow{color:var(--ink-400);font-family:var(--font-latin);text-align:center}
+#s32 .guide-flow .gf-then{font-family:var(--font-mono);color:var(--ink-900);font-weight:600}
+#s32 .guide-flow .gf-then code{font-family:var(--font-mono);background:var(--paper-card);padding:1px 6px;border-radius:3px;font-size:.96em;color:var(--brand-ink);border:1px solid var(--rule)}
+#s32 .br .c{font-family:var(--font-mono);font-size:15px;color:var(--brand-ink);font-weight:700;letter-spacing:.005em;white-space:nowrap}
+#s32 .br .use strong{color:var(--ink-900);display:block;font-size:15px;margin-bottom:2px}
+#s32 .branches{display:grid;grid-template-columns:repeat(2,1fr);margin-top:22px;gap:12px}
+#s32 .br{display:grid;grid-template-columns:auto 1fr;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;border-left:3px solid var(--brand);padding:14px 20px;gap:16px}
+#s32 .br .use{color:var(--ink-700);line-height:1.55;font-size:13.5px}
+
+/* S33 — utility commands table-card */
+#s33 .u .c{font-family:var(--font-mono);font-size:14px;color:var(--brand-ink);font-weight:700;letter-spacing:.005em}
+#s33 .u .when{margin-top:auto;padding:10px 12px;background:var(--paper-sunk);border-radius:4px;font-size:12px;color:var(--ink-700);line-height:1.55}
+#s33 .u .when-h{display:block;font-family:var(--font-latin);font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);margin-bottom:4px}
+#s33 .takeaway .ta-em{display:block;font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+#s33 .util{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px}
+#s33 .u{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;min-height:0;padding:16px 14px;gap:8px}
+#s33 .u .r{color:var(--ink-900);font-weight:700;line-height:1.45;font-size:12.5px}
+#s33 .u .w{color:var(--ink-500);line-height:1.65;padding-top:8px;border-top:1px dashed var(--rule);font-size:11.5px}
+#s33 .takeaway{background:var(--paper-ink);color:#f5f0e6;border-left:4px solid var(--brand);letter-spacing:.005em;line-height:1.65;margin-top:16px;padding:12px 20px;font-size:13.5px}
+
+/* S34 — model / effort */
+#s34 .lev .icon{display:flex;align-items:baseline;gap:14px}
+#s34 .lev.deep{background:var(--paper-ink);color:#f5f0e6;border-color:var(--ink-900)}
+#s34 .lev.deep h3{color:#fff}
+#s34 .lev.deep p{color:#c4b9a5}
+#s34 .lev.deep .ex{background:rgba(255,255,255,.06);color:#c4b9a5}
+#s34 .levels{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;gap:16px}
+#s34 .lev{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;min-height:0;padding:20px 22px;gap:10px}
+#s34 .lev .icon .b{font-family:var(--font-latin);font-weight:800;color:var(--brand);line-height:.9;letter-spacing:-.02em;font-size:42px}
+#s34 .lev .icon h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:20px}
+#s34 .lev p{color:var(--ink-700);font-size:13.5px;line-height:1.65}
+#s34 .lev .ex{font-family:var(--font-mono);color:var(--ink-500);background:var(--paper-sunk);border-radius:3px;margin-top:auto;font-size:11.5px;padding:7px 11px}
+#s34 .switch{text-align:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);color:var(--brand-ink);font-weight:700;margin-top:14px;padding:10px 18px;font-size:13px}
+
+/* S35 — case selector */
+#s35 .title.md{font-size:26px}
+#s35 .cases{display:flex;flex-direction:column;margin-top:14px;gap:5px}
+#s35 .case{display:grid;grid-template-columns:1fr 420px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;padding:9px 18px;font-size:13.5px;gap:14px}
+#s35 .case .pick{display:grid;grid-template-columns:repeat(4,1fr);justify-content:end;gap:6px}
+#s35 .case .pick .p{font-family:var(--font-mono);border:1px solid var(--rule-strong);border-radius:3px;color:var(--ink-400);letter-spacing:.02em;white-space:nowrap;background:var(--paper);text-align:center;font-size:9.5px;padding:5px 9px;line-height:1.2}
+#s35 .case .label{flex:1;min-width:0}
+
+/* Shared quiz styles for s15, s16, s35, s35a */
+#s15 .quiz-cases,#s16 .quiz-cases{margin-top:18px;display:flex;flex-direction:column;gap:7px}
+#s15 .quiz-case,#s16 .quiz-case{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:center;
+  padding:10px 20px;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;font-size:14.5px}
+#s15 .quiz-case .scenario,#s16 .quiz-case .scenario{color:var(--ink-900);font-weight:500;letter-spacing:.005em}
+#s15 .quiz-case .scenario code,#s16 .quiz-case .scenario code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+#s15 .quiz-case .pick,#s16 .quiz-case .pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;justify-content:end}
+#s15 .quiz-case .pick .p,#s16 .quiz-case .pick .p{font-family:var(--font-mono);font-size:11px;padding:5px 10px;border:1px solid var(--rule-strong);border-radius:3px;color:var(--ink-400);letter-spacing:.02em;white-space:nowrap;background:var(--paper);text-align:center}
+
+/* Answer-state quiz cases (s16, s35a) */
+#s16 .quiz-case.has-answer{grid-template-columns:1fr 420px;grid-template-rows:auto auto;column-gap:18px;row-gap:4px;align-items:start;padding:9px 20px}
+#s35a .case.has-answer{grid-template-columns:1fr 420px;grid-template-rows:auto auto;column-gap:18px;row-gap:4px;align-items:start;padding:9px 20px}
+#s16 .quiz-case.has-answer .scenario,#s35a .case.has-answer .scenario{padding-top:3px}
+#s16 .quiz-case.has-answer .reason,#s35a .case.has-answer .reason{grid-column:2;justify-self:end;font-size:11px;color:var(--ink-700);line-height:1.5;text-align:right;max-width:420px}
+#s16 .quiz-case.has-answer .reason code,#s35a .case.has-answer .reason code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+.p.ok{background:var(--brand)!important;border-color:var(--brand)!important;color:#fff!important;font-weight:700}
+
+#s35a .cases,#s51a .cases{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+#s35a .case,#s51a .case{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:center;padding:14px 22px;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;font-size:15px}
+#s35 .case .scenario,#s35a .case .scenario,#s51 .case .scenario,#s51a .case .scenario{color:var(--ink-900);font-weight:500;letter-spacing:.005em}
+#s51 .case .scenario code,#s51a .case .scenario code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+#s35a .case .pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;justify-content:end}
+#s35a .case .pick .p{font-family:var(--font-mono);font-size:11px;padding:5px 10px;border:1px solid var(--rule-strong);border-radius:3px;color:var(--ink-400);letter-spacing:.02em;white-space:nowrap;background:var(--paper);text-align:center}
+
+/* Six-option quiz cases (s51, s51a) — wider pick column */
+#s51 .cases.six .case,#s51a .cases.six .case{grid-template-columns:1fr 600px}
+#s51 .cases.six .case .pick,#s51a .cases.six .case .pick{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;justify-content:end}
+#s51 .cases.six .case .pick .p,#s51a .cases.six .case .pick .p{font-family:var(--font-mono);font-size:10.5px;padding:3px 6px;border:1px solid var(--rule-strong);border-radius:3px;color:var(--ink-400);letter-spacing:.02em;white-space:nowrap;background:var(--paper);text-align:center}
+#s51a .case.has-answer{grid-template-columns:1fr 600px;grid-template-rows:auto auto;column-gap:18px;row-gap:2px;align-items:start;padding:9px 20px 5px}
+#s51a .case.has-answer .scenario{padding-top:3px}
+#s51a .case.has-answer .reason{grid-column:2;justify-self:end;font-size:11px;color:var(--ink-700);line-height:1.5;text-align:right;max-width:600px}
+#s51a .case.has-answer .reason code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+
+/* S37 — pain checklist */
+#s37 .pain .ic{width:28px;height:28px;border-radius:50%;background:var(--brand-tint);color:var(--brand);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-latin);font-size:14px;font-weight:800}
+#s37 .pain code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 6px;border-radius:3px;font-size:.86em;color:var(--brand-ink)}
+#s37 .pains{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;gap:10px}
+#s37 .pain{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;padding:14px 20px}
+#s37 .pain .tx{color:var(--ink-900);font-weight:500;line-height:1.5;letter-spacing:.005em;font-size:14px}
+#s37 .arrow-hint{font-family:var(--font-latin);font-size:12px;letter-spacing:.18em;color:var(--ink-400);text-transform:uppercase;margin-top:14px}
+
+/* S38 — 5 limits */
+#s38 .lim-fix{margin-top:6px;padding-top:10px;border-top:1px dashed var(--rule);font-size:13px;color:var(--ink-700);position:relative;z-index:1}
+#s38 .lim-fix strong{font-weight:700;color:var(--brand-ink);font-family:var(--font-jp);letter-spacing:.005em}
+#s38 .lim .red{height:2px;background:var(--brand);width:32px;margin-top:auto;position:relative;z-index:1}
+#s38 .limits{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}
+#s38 .lim{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;overflow:hidden;min-height:0;padding:20px 18px;gap:8px}
+#s38 .lim h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;line-height:1.35;position:relative;z-index:1;font-size:16.5px}
+#s38 .lim p{color:var(--ink-500);line-height:1.6;position:relative;z-index:1;font-size:12.5px}
+#s38 .lim::before{content:attr(data-n);position:absolute;top:-12px;right:-8px;font-family:var(--font-latin);font-weight:800;color:var(--paper-sunk);letter-spacing:-.04em;line-height:1;z-index:0;font-size:64px}
+
+/* S39 — limit → tool mapping */
+#s39 .mcell:last-child{border-right:none}
+#s39 .mcell .limit{font-family:var(--font-latin);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);font-weight:700;line-height:1.45}
+#s39 .mcell .arr{font-family:var(--font-latin);color:var(--ink-300);font-size:16px;margin:6px 0}
+#s39 .mcell .example{font-size:11.5px;color:var(--ink-700);line-height:1.55;letter-spacing:.005em}
+#s39 .map{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:22px}
+#s39 .mcell{border-right:1px solid var(--rule);display:flex;flex-direction:column;min-height:0;padding:18px 16px;gap:6px}
+#s39 .mcell .tool{font-weight:800;color:var(--ink-900);letter-spacing:.005em;line-height:1.2;font-size:19px}
+#s39 .mcell .essence{color:var(--ink-500);line-height:1.6;margin-top:auto;padding-top:8px;border-top:1px solid var(--rule);font-size:12px}
+
+/* S40 — Skills concept */
+#s40 .pile-before .p{padding:6px 10px;background:#fff;border:1px solid var(--rule);border-radius:3px;border-left:3px solid var(--ink-300)}
+#s40 .arrow{font-size:32px;color:var(--brand);text-align:center;font-family:var(--font-latin)}
+#s40 .when .row::before{content:"›";color:var(--brand);font-weight:700;margin-right:10px;font-family:var(--font-latin)}
+#s40 .title.md{font-size:26px;max-width:1100px}
+#s40 .skill-vis{display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;max-width:920px;margin-top:14px;gap:14px}
+#s40 .pile-before{background:var(--paper-sunk);border-radius:6px;display:flex;flex-direction:column;font-family:var(--font-mono);color:var(--ink-500);font-size:11.5px;padding:12px 14px;gap:6px}
+#s40 .pile-before .pl{padding:7px 12px;font-size:11px}
+#s40 .skill-card{background:var(--ink-900);color:#f5f0e6;border-radius:6px;border-left:6px solid var(--brand);padding:16px 18px;gap:8px}
+#s40 .skill-card .name{font-family:var(--font-mono);color:var(--brand-tint);font-weight:700;margin-bottom:8px;font-size:13.5px}
+#s40 .skill-card .desc{color:#c4b9a5;font-size:11.5px;line-height:1.55}
+#s40 .when{display:flex;flex-direction:column;max-width:720px;margin-top:12px;gap:3px}
+#s40 .when .row{color:var(--ink-700);background:var(--paper-card);border:1px solid var(--rule);border-radius:3px;line-height:1.55;font-size:12px;padding:6px 12px}
+
+/* S41 — Skill bad/good with ops */
+#s41 .bg .lbl{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+#s41 .bg .bcol .lbl{color:var(--ink-400)}
+#s41 .bg .gcol .lbl{color:var(--brand)}
+#s41 .bg .gcol .yml{color:var(--ink-900)}
+#s41 .bg .gcol .yml b{color:var(--brand);font-weight:700}
+#s41 .ops h4{font-family:var(--font-latin);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
+#s41 .ops ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.5}
+#s41 .ops li::before{content:"";position:absolute;left:0;top:.65em;width:10px;height:1px;background:var(--brand)}
+#s41 .ops code{font-family:var(--font-mono);background:rgba(255,255,255,.08);padding:1px 5px;border-radius:2px;color:#fff;font-size:.92em}
+#s41 .split{display:grid;grid-template-columns:1.2fr 1fr;margin-top:18px;gap:20px}
+#s41 .bg{display:flex;flex-direction:column;gap:12px}
+#s41 .bg .bcol{border-radius:6px;border:1px solid var(--rule);background:var(--paper-sunk);padding:16px 20px}
+#s41 .bg .gcol{border-radius:6px;border:1px solid var(--rule);background:var(--paper-card);border-color:var(--ink-900);padding:16px 20px}
+#s41 .bg .yml{font-family:var(--font-mono);color:var(--ink-700);white-space:pre-wrap;font-size:12px;line-height:1.55}
+#s41 .ops{background:var(--paper-ink);color:#f5f0e6;border-radius:6px;display:flex;flex-direction:column;gap:10px;padding:18px 22px}
+#s41 .ops li{padding-left:18px;position:relative;color:#d8d0bd;font-size:12.5px}
+
+/* S42 — MCP topology */
+#s42 .node.cc{background:var(--ink-900);color:#fff;border-color:var(--ink-900)}
+#s42 .node.cc .ttl{color:#fff}
+#s42 .node .ttl{font-family:var(--font-mono);font-size:14px;color:var(--brand-ink);font-weight:700}
+#s42 .node .sub{font-size:11px;color:var(--ink-400);margin-top:4px;letter-spacing:.06em}
+#s42 .node.cc .sub{color:#c4b9a5}
+#s42 .center{text-align:center;font-family:var(--font-latin);color:var(--ink-300);font-size:28px}
+#s42 .center small{display:block;font-size:10px;letter-spacing:.18em;color:var(--brand);font-weight:700;margin-top:6px}
+#s42 .ext{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#s42 .ext .e .sub{display:block;font-family:var(--font-latin);font-size:10px;color:var(--ink-500);font-weight:400;letter-spacing:.04em;margin-top:4px}
+#s42 .notes-tbl{margin-top:24px}
+#s42 .topo{display:grid;grid-template-columns:200px 80px 1fr;align-items:center;margin-top:22px;gap:20px}
+#s42 .node{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;text-align:center;padding:18px 20px}
+#s42 .ext .e{background:var(--paper-sunk);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);color:var(--brand-ink);text-align:center;font-weight:600;line-height:1.4;padding:11px 10px;font-size:11.5px}
+
+/* S43 — MCP risks */
+#s43 .rg .arrow{color:var(--brand);font-family:var(--font-latin);font-size:14px;text-align:center}
+#s43 .rg .fix code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.88em;color:var(--brand-ink)}
+#s43 .risk-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;gap:10px}
+#s43 .rg{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;border-left:3px solid var(--brand);display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;padding:14px 18px}
+#s43 .rg .risk{color:var(--ink-900);font-weight:600;letter-spacing:.005em;font-size:14px}
+#s43 .rg .fix{color:var(--ink-500);line-height:1.5;font-size:12.5px}
+
+/* S44 — Hooks */
+#s44 .hook .ev{font-family:var(--font-mono);font-size:14px;color:#fff;background:var(--ink-900);padding:5px 12px;border-radius:3px;align-self:flex-start;font-weight:700;letter-spacing:.02em}
+#s44 .principle-h em{color:var(--brand);font-style:normal}
+#s44 .hooks-vis{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;gap:12px}
+#s44 .hook{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;min-height:0;padding:20px 20px;gap:8px}
+#s44 .hook h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:16px;line-height:1.35}
+#s44 .hook p{color:var(--ink-500);line-height:1.6;margin-top:auto;font-size:12.5px}
+#s44 .principle-h{text-align:center;font-weight:700;color:var(--ink-900);letter-spacing:.01em;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:22px;font-size:19px;padding:12px 0}
+
+/* S45 — should/should not */
+#s45 .ssc.do{background:var(--paper-card);border-color:var(--ink-900);border-left:6px solid var(--brand)}
+#s45 .ssc.dont{background:var(--paper-sunk)}
+#s45 .ssc .head{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+#s45 .ssc.dont .head{color:var(--ink-400)}
+#s45 .ssc ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+#s45 .ssc.do li{font-weight:500;color:var(--ink-900)}
+#s45 .ssc.dont li{color:var(--ink-500)}
+#s45 .ss{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;gap:20px}
+#s45 .ssc{border-radius:6px;border:1px solid var(--rule);padding:20px 22px}
+#s45 .ssc li{line-height:1.5;color:var(--ink-700);background:var(--paper);border:1px solid var(--rule);border-radius:3px;font-size:14px;padding:8px 12px}
+#s45 .startsmall{font-family:var(--font-mono);color:var(--brand-ink);background:var(--brand-tint);border-radius:3px;font-weight:600;margin-top:16px;padding:10px 18px;font-size:12.5px}
+
+/* S46 — Subagents diagram */
+#s46 .topo46{display:grid;grid-template-columns:160px 100px 1fr;gap:16px;align-items:center}
+#s46 .main-ag small{display:block;font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;color:#c4b9a5;font-weight:400;margin-top:6px}
+#s46 .flow-mid{text-align:center;font-family:var(--font-latin);font-size:11px;letter-spacing:.16em;color:var(--brand);font-weight:700}
+#s46 .flow-mid svg{display:block;margin:0 auto 4px;width:60px;height:30px;color:var(--brand)}
+#s46 .agents{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+#s46 .agents .ag small{display:block;font-family:var(--font-latin);font-size:10px;letter-spacing:.06em;color:var(--ink-400);font-weight:400;margin-top:3px}
+#s46 .sub-vis{display:grid;grid-template-columns:1fr;gap:20px;max-width:900px;margin-top:18px}
+#s46 .main-ag{background:var(--ink-900);color:#fff;text-align:center;border-radius:6px;font-family:var(--font-mono);font-weight:700;padding:20px;font-size:13px}
+#s46 .agents .ag{background:var(--paper-card);border:1px solid var(--rule);border-left:3px solid var(--brand);border-radius:3px;font-family:var(--font-mono);color:var(--ink-700);font-weight:600;padding:11px 13px;font-size:11.5px}
+
+/* S47 — Plugins lifecycle */
+#s47 .bundle .label{font-family:var(--font-latin);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:700}
+#s47 .bundle .components{display:flex;gap:8px;flex-wrap:wrap}
+#s47 .bundle .components .pc{font-family:var(--font-mono);font-size:13px;padding:6px 14px;background:var(--paper-sunk);border-radius:3px;color:var(--brand-ink);font-weight:600}
+#s47 .stages{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+#s47 .stage:last-child{border-right:none}
+#s47 .stage .n{font-family:var(--font-latin);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-400);font-weight:700}
+#s47 .stage code{font-family:var(--font-mono);font-size:.85em;background:var(--paper-sunk);padding:1px 6px;border-radius:2px;color:var(--brand-ink)}
+#s47 .stage .plug-cp{list-style:none;padding:0;margin-top:auto;padding-top:12px;border-top:1px dashed var(--rule);display:flex;flex-direction:column;gap:5px}
+#s47 .stage .plug-cp li{font-size:12px;color:var(--ink-700);line-height:1.5;padding-left:14px;position:relative}
+#s47 .stage .plug-cp li::before{content:"·";position:absolute;left:4px;top:-1px;font-weight:700;color:var(--brand)}
+#s47 .plug-vis{display:flex;flex-direction:column;margin-top:18px;gap:14px}
+#s47 .bundle{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:grid;grid-template-columns:auto 1fr;align-items:center;padding:18px 22px;gap:20px}
+#s47 .stage{border-right:1px solid var(--rule);display:flex;flex-direction:column;padding:14px 18px;gap:6px}
+#s47 .stage .what{color:var(--ink-900);font-weight:600;font-size:14px}
+#s47 .stage .why{color:var(--ink-500);line-height:1.55;font-size:12px}
+
+/* S48, S49 — workflow components (vertical sequence) */
+.wf-result .r-label{font-family:var(--font-latin);font-size:11px;letter-spacing:.14em;color:var(--brand);font-weight:700;border:1px solid var(--brand);padding:4px 11px;border-radius:3px;line-height:1}
+
+/* S50 — design principles */
+#s50 .ds-card .roman{font-family:var(--font-latin);font-size:28px;font-weight:800;color:var(--brand);line-height:1;letter-spacing:.02em}
+#s50 .ds-card .ds-eg{margin-top:auto;padding-top:12px;border-top:1px dashed var(--rule);font-size:12px;color:var(--ink-700);line-height:1.55}
+#s50 .ds-card .ds-eg-h{display:block;font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);margin-bottom:4px}
+#s50 .ds{display:grid;grid-template-columns:repeat(4,1fr);margin-top:22px;gap:12px}
+#s50 .ds-card{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;min-height:0;padding:22px 20px;gap:10px}
+#s50 .ds-card h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:18px}
+#s50 .ds-card p{color:var(--ink-500);line-height:1.65;font-size:12.5px}
+
+/* S51 — classification workshop */
+#s51 .cases{margin-top:24px;display:flex;flex-direction:column;gap:8px}
+#s51 .case code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.88em;color:var(--brand-ink)}
+#s51 .candidates h4{font-family:var(--font-latin);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
+#s51 .candidates .opts{display:flex;flex-direction:column;gap:6px}
+#s51 .work{display:grid;grid-template-columns:1.4fr 1fr;margin-top:18px;gap:20px}
+#s51 .case{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:4px;color:var(--ink-900);font-weight:500;line-height:1.5;padding:11px 18px;font-size:14px}
+#s51 .candidates{background:var(--paper-ink);color:#f5f0e6;border-radius:6px;display:flex;flex-direction:column;padding:20px 22px;gap:12px}
+#s51 .candidates .opts .o{font-family:var(--font-mono);background:rgba(255,255,255,.06);border-radius:3px;color:#fff;font-weight:600;padding:7px 13px;font-size:12.5px}
+
+/* S52 — 3 chapter linkage */
+#s52 .ph .lbl{font-family:var(--font-latin);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:700}
+#s52 .arc .arr{display:flex;align-items:center;justify-content:center;font-family:var(--font-latin);color:var(--brand);font-size:24px}
+#s52 .arc .arr svg{width:36px;height:24px;color:var(--brand)}
+#s52 .ph:nth-child(3){background:var(--paper-sunk)}
+#s52 .ph:nth-child(5){background:var(--paper-ink);color:#f5f0e6}
+#s52 .ph:nth-child(5) h3{color:#fff}
+#s52 .ph:nth-child(5) p{color:#c4b9a5}
+#s52 .arc{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;align-items:stretch;gap:0;margin-top:22px}
+#s52 .ph{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;position:relative;padding:26px 24px;gap:12px}
+#s52 .ph h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;line-height:1.4;font-size:20px}
+#s52 .ph p{color:var(--ink-500);line-height:1.65;margin-top:auto;font-size:12.5px}
+
+/* S53 — final 3 takeaways */
+#s53 .ft .ft-do{margin-top:auto;padding-top:14px;border-top:1px dashed var(--rule);font-size:12.5px;color:var(--ink-700);line-height:1.6}
+#s53 .ft .ft-do-h{display:block;font-family:var(--font-latin);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);margin-bottom:5px}
+#s53 .ft .rule{width:32px;height:2px;background:var(--brand)}
+#s53 .ft code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 6px;border-radius:2px;font-size:.85em;color:var(--brand-ink)}
+#s53 .final{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;gap:14px}
+#s53 .ft{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;min-height:0;padding:26px 24px;gap:14px}
+#s53 .ft .n{font-family:var(--font-latin);font-weight:800;color:var(--brand);line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.02em;font-size:42px}
+#s53 .ft h3{font-weight:700;color:var(--ink-900);letter-spacing:.005em;font-size:16.5px;line-height:1.5}
+
+/* S54 — closing */
+#s54 .slide-inner{justify-content:center;align-items:flex-start}
+#s54 .closing-msg em{color:var(--brand);font-style:normal;background:linear-gradient(transparent 60%,var(--brand-tint) 60%)}
+#s54 .closing-meta .cm .label{font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);margin-bottom:8px;font-weight:700}
+#s54 .closing-meta .cm .text code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+#s54 .closing-msg{font-weight:800;color:var(--ink-900);letter-spacing:.005em;max-width:none;white-space:nowrap;word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty;font-size:54px;line-height:1.18}
+#s54 .closing-meta{display:grid;grid-template-columns:1fr 1fr 1fr;max-width:840px;width:100%;margin-top:32px;gap:14px}
+#s54 .closing-meta .cm{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+#s54 .closing-meta .cm .text{color:var(--ink-900);font-weight:500;line-height:1.5;font-size:13px}
+
+/* S55 — survey + handout */
+#s55 .panel-h{font-family:var(--font-latin);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);display:flex;align-items:center;gap:10px}
+#s55 .panel-h::before{content:"";width:24px;height:1px;background:var(--brand)}
+#s55 .qr{display:grid;grid-template-columns:140px 1fr;gap:18px;align-items:center}
+#s55 .qr .label{font-size:13px;color:var(--ink-500);line-height:1.6}
+#s55 .qr .label a{text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px;color:var(--brand-ink);font-weight:600;border-bottom:1px solid var(--rule-strong)}
+#s55 ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+#s55 li::before{content:"";position:absolute;left:0;top:.7em;width:10px;height:1px;background:var(--brand)}
+#s55 .grid{display:grid;grid-template-columns:1fr 1fr;align-items:start;margin-top:22px;gap:24px}
+#s55 .panel{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;display:flex;flex-direction:column;padding:22px 24px;gap:14px}
+#s55 .qr img{border:1px solid var(--rule);border-radius:4px;background:#fff;padding:6px;width:120px;height:120px}
+#s55 li{color:var(--ink-700);line-height:1.6;padding-left:18px;position:relative;font-size:13.5px}
+#s55 .thx{font-weight:800;color:var(--ink-900);line-height:1.2;letter-spacing:.005em;word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty;font-size:32px;margin-top:4px}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYOUT FIX v3 — 報告された見切れスライドへの追加対処
+   #s15 / #s22 / #s23 / #s35 / #s40
+   主因: .title.md が日本語2-3行に折り返して縦領域を食う
+   ════════════════════════════════════════════════════════════════ */
+
+/* Subtle reveal helpers for motion slides */
+.reveal{opacity:0;transform:translateY(6px);transition:opacity .55s var(--ease-emph),transform .55s var(--ease-emph)}
+.slide.is-active .reveal{opacity:1;transform:none}
+.slide.is-active .reveal.d1{transition-delay:.08s}
+.slide.is-active .reveal.d2{transition-delay:.18s}
+.slide.is-active .reveal.d3{transition-delay:.28s}
+.slide.is-active .reveal.d4{transition-delay:.38s}
+.slide.is-active .reveal.d5{transition-delay:.48s}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYOUT FIX OVERRIDES (v2)
+   - 縦方向の余白を圧縮し、本文エリアを十分に確保
+   - タイトルサイズ抑制 + 日本語の改行制御
+   - カードの min-height を撤廃して、内容に応じて縮む構造に
+   ════════════════════════════════════════════════════════════════ */
+
+/* slide-inner: 余白とgapを圧縮 */
+.slide-inner::before{content:attr(data-num);position:absolute;left:var(--gutter);font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:.18em;color:var(--ink-400);top:22px;font-size:10.5px}
+
+/* title typography: サイズを抑え、日本語改行を整える */
+.title{font-family:var(--font-jp);font-weight:700;letter-spacing:.005em;color:var(--ink-900);line-height:1.32;margin-top:2px;word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty}
+.hero-title{word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty}
+.msg{color:var(--ink-700);font-weight:500;letter-spacing:.005em;text-wrap:pretty;font-size:16px;margin-top:4px;line-height:1.6;max-width:980px}
+
+/* Section divider (S5/S18/S36): タイトル列の幅を確保、改行抑制 */
+.section-slide .slide-inner{justify-content:center;align-items:flex-start;padding-top:40px}
+.section-slide .section-grid{display:grid;align-items:center;width:100%;margin-top:24px;grid-template-columns:160px 3px 1fr;gap:40px}
+.section-slide .section-num{font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:800;line-height:.85;color:var(--brand);letter-spacing:-.03em;font-size:148px}
+.section-slide .section-rail{width:3px;background:var(--brand);align-self:stretch;min-height:200px}
+.section-slide .section-title{font-weight:800;color:var(--ink-900);letter-spacing:.005em;word-break:keep-all;line-break:strict;overflow-wrap:anywhere;text-wrap:pretty;font-size:46px;line-height:1.2;max-width:none}
+.section-slide .section-sub{color:var(--ink-500);line-height:1.7;font-size:17px;margin-top:20px;max-width:none}
+.section-slide .section-rule{width:80px;height:2px;background:var(--ink-900);margin-top:24px}
+
+/* グローバル: カードの min-height を撤廃し、内容に追従させる */
+
+/* グリッド系の上マージン圧縮 */
+#s2 .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:22px}
+#s3 .flow,#s7 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px}
+#s4 .tiers{display:grid;grid-template-columns:120px 1fr 1fr 1.4fr;gap:0;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:22px}
+#s9 .lifespan{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+
+/* S48/S49 wf — vertical sequence (compact override) */
+.wf-flow{display:flex;flex-direction:column;gap:0;width:100%;max-width:none;margin-top:20px}
+.wf-step{display:grid;align-items:center;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:22px 26px;gap:22px;grid-template-columns:42px 190px 1fr}
+.wf-step .step-no{border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-family:var(--font-latin);font-weight:700;letter-spacing:.01em;width:36px;height:36px;font-size:16px}
+.wf-step .comp{font-family:var(--font-mono);color:#fff;background:var(--ink-900);border-radius:3px;font-weight:600;text-align:center;line-height:1.3;font-size:14px;padding:7px 12px}
+.wf-step .role{color:var(--ink-700);font-size:14.5px;line-height:1.55}
+.wf-step .role strong{color:var(--ink-900);font-weight:700;font-size:15.5px;margin-right:10px}
+.wf-arrow{display:grid;place-items:center;color:var(--ink-300);font-size:14px;line-height:1;margin:0 0 0 46px;height:10px;margin-left:42px}
+.wf-arrow::before{content:"";display:block;width:2px;background:var(--rule-strong);border-radius:2px;height:10px}
+.wf-result{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--ink-900);border-radius:6px;margin-top:14px;padding:16px 26px}
+.wf-result .r-text{font-weight:600;color:#fff;letter-spacing:.005em;font-size:15.5px}
+
+/* 共通: タイトルサイズと改行制御をさらにタイト化 */
+.title.lg{font-size:40px;line-height:1.18}
+.title.md{font-size:28px;line-height:1.28}
+.title.sm{font-size:22px;line-height:1.4}
+.eyebrow{font-family:var(--font-latin);font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-400);font-size:11px;margin-bottom:4px}
+.slide-num{font-size:11px}
+
+</style>
+</head>
+<body>
+
+<header class="deck-header">
+  <a class="deck-brand" href="#1"><span class="deck-brand-mark"></span><span class="deck-brand-title">Claude Codeを設計して使う</span></a>
+  <div class="deck-section-label" id="sectionLabel">Introduction</div>
+  <nav class="deck-nav"><a href="./notes.html">Notes →</a></nav>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Slide 1 — Title
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="slide is-active" id="s1" data-section="Introduction">
+  <div class="slide-inner" data-num="01">
+    <div class="hero-block">
+      <div class="hero-mark reveal"></div>
+      <div>
+        <div class="kicker reveal d1">Workshop · 2026</div>
+        <h1 class="hero-title reveal d2">Claude Codeを<br>設計して使う</h1>
+        <p class="hero-sub reveal d3">「なんとなく使う」から「設計して使う」へ。</p>
+        <div class="hero-meta reveal d4">
+          <span class="hero-date tabular">2026.05.16</span>
+          <span class="hero-org">AI広場 · 社内勉強会</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">今日はClaude Codeの便利機能を並べる会ではありません。内部の動き方を踏まえて、何をどこに置き、どこから先を仕組みに逃がすかを考える会です。</aside>
+</section>
+
+<!-- Slide 2 — 今日のゴールと前提 -->
+<section class="slide" id="s2" data-section="Introduction">
+  <div class="slide-inner" data-num="02">
+    <div class="kicker">Goal &amp; Prerequisites</div>
+    <h2 class="title md">Claude Codeを「会話相手」ではなく、<br><em style="color:var(--brand);font-style:normal">「設計対象」</em>として扱えるようになる。</h2>
+    <div class="grid">
+      <div class="col">
+        <span class="col-label">Goals</span>
+        <h3>持ち帰ってほしい3つの問い</h3>
+        <ul>
+          <li>最初に何を渡すか</li>
+          <li>会話中の情報をどう運用するか</li>
+          <li>自然言語指示の限界をどう補うか</li>
+        </ul>
+      </div>
+      <div class="col">
+        <span class="col-label">Prerequisites</span>
+        <h3>こんな人を想定</h3>
+        <ul>
+          <li>Claude Codeのアカウント・環境は準備済み</li>
+          <li><code>/init</code>や<code>CLAUDE.md</code>を見たことがある</li>
+          <li><code>/compact</code>や<code>/clear</code>に困った経験がある</li>
+          <li>便利機能より、原理と設計判断を重視する</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 3 — 全体像 -->
+<section class="slide" id="s3" data-section="Introduction">
+  <div class="slide-inner" data-num="03">
+    <div class="kicker">Today's Map</div>
+    <h2 class="title md">経験者が通る<em style="color:var(--brand);font-style:normal">3つの困りごと</em>を、設計の言葉で読み替える。</h2>
+    <div class="flow">
+      <div class="flow-card reveal d1">
+        <div class="n tabular">01</div>
+        <div class="flow-pain"><code>/init</code>後に何を書けばいい？</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-theme">最初に渡す情報を設計する</div>
+      </div>
+      <div class="flow-card reveal d2">
+        <div class="n tabular">02</div>
+        <div class="flow-pain">長い会話で挙動が崩れる。</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-theme">コンテキストを運用する</div>
+      </div>
+      <div class="flow-card reveal d3">
+        <div class="n tabular">03</div>
+        <div class="flow-pain">毎回の手作業・守らない指示がつらい。</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-theme">仕組みに逃がす</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 4 — エビデンス情報の扱い -->
+<section class="slide" id="s4" data-section="Introduction">
+  <div class="slide-inner" data-num="04">
+    <div class="kicker">Evidence Disclaimer</div>
+    <h2 class="title md">外部解析やリーク由来の内容は<br>「現在仕様」ではなく「観測からの仮説」として扱う。</h2>
+    <div class="tiers">
+      <div class="tier-h">信頼度</div><div class="tier-h">情報源</div><div class="tier-h">扱い</div><div class="tier-h">代表例</div>
+      <div class="tier-cell lvl"><span class="lvl-dot">高</span></div>
+      <div class="tier-cell">公式ドキュメント</div>
+      <div class="tier-cell">仕様として参照</div>
+      <div class="tier-cell"><ul><li><a href="https://code.claude.com/docs/ja/overview">Claude Code Docs</a></li></ul></div>
+      <div class="tier-cell lvl"><span class="lvl-dot mid">中</span></div>
+      <div class="tier-cell">公式ブログ / API docs / 論文</div>
+      <div class="tier-cell">背景理解</div>
+      <div class="tier-cell"><ul><li><a href="https://www.trychroma.com/research/context-rot">Context Rot: How Increasing Input Tokens Impacts LLM Performance</a></li><li><a href="https://arxiv.org/abs/2307.03172">Lost in the Middle</a></li><li><a href="https://www.morphllm.com/context-rot">Context Rot: The Complete Guide to Why LLMs Degrade as Context Grows</a></li></ul></div>
+      <div class="tier-cell lvl"><span class="lvl-dot aux">補助</span></div>
+      <div class="tier-cell">外部分析・公開解析</div>
+      <div class="tier-cell">仮説として扱う</div>
+      <div class="tier-cell"><ul><li><a href="https://www.dbreunig.com/2026/04/04/how-claude-code-builds-a-system-prompt.html">How Claude Code Builds a System Prompt</a></li><li><a href="https://www.sabrina.dev/p/claude-code-source-leak-analysis">Claude Code source leak analysis</a></li><li><a href="https://github.com/ultraworkers/claw-code">GitHub: ultraworkers/claw-code</a></li><li><a href="https://github.com/asgeirtj/system_prompts_leaks">GitHub: asgeirtj/system_prompts_leaks</a></li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Slide 5 — Part 1 Divider
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="slide section-slide" id="s5" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="05">
+    <div class="section-grid">
+      <div class="section-num tabular reveal">1</div>
+      <div class="section-rail reveal d1"></div>
+      <div>
+        <div class="section-eyebrow reveal d2">第1部</div>
+        <h2 class="section-title reveal d3">Claude Codeに渡す<br>情報を設計する</h2>
+        <p class="section-sub reveal d4">情報の渡し方を設計するだけで、出力品質は劇的に変わる。</p>
+        <div class="section-rule reveal d5"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 6 — よくある状況 -->
+<section class="slide" id="s6" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="06">
+    <div class="kicker">Common Frustrations</div>
+    <h2 class="title md"><code>CLAUDE.md</code>は「とりあえず作るファイル」ではなく、<br>Claude Codeの振る舞いを決める入口。</h2>
+    <div class="qlist">
+      <div class="qrow"><span class="qn tabular">01</span><span class="qt"><code>/init</code>で作られるけど、何を書けばいい？</span></div>
+      <div class="qrow"><span class="qn tabular">02</span><span class="qt"><code>settings.json</code>や<code>Auto memory</code>と何が違う？</span></div>
+      <div class="qrow"><span class="qn tabular">03</span><span class="qt">長く書けば書くほど賢くなる？</span></div>
+    </div>
+    <div class="takeaway">単なるメモではなく、プロンプトの初期文脈に流し込まれる「指示」だと捉え直すところから始める。</div>
+  </div>
+</section>
+
+<!-- Slide 7 — 第1部の問い -->
+<section class="slide" id="s7" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="07">
+    <div class="kicker">Part 1 Inquiry</div>
+    <h2 class="title md">情報を、<em style="color:var(--brand);font-style:normal">常に渡す</em>・<em style="color:var(--brand);font-style:normal">必要なときだけ読む</em>・<em style="color:var(--brand);font-style:normal">機械で止める</em>。どう分ける？</h2>
+    <div class="lanes">
+      <div class="lane reveal d1">
+        <span class="lane-label">Always-on</span>
+        <h3>常時渡す</h3>
+        <div class="lane-rule"></div>
+        <div class="lane-body">短い判断基準。毎回の会話に効く方針だけを残す。</div>
+      </div>
+      <div class="lane reveal d2">
+        <span class="lane-label">On Demand</span>
+        <h3>必要時参照</h3>
+        <div class="lane-rule"></div>
+        <div class="lane-body">長い仕様や作業状態。読みに行かせる資料に逃がす。</div>
+      </div>
+      <div class="lane reveal d3">
+        <span class="lane-label">Mechanical</span>
+        <h3>機械的に制御</h3>
+        <div class="lane-rule"></div>
+        <div class="lane-body">権限・禁止操作。自然言語に頼らず、設定とフックで止める。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 8 — プロンプトの組み立て -->
+<section class="slide" id="s8" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="08">
+    <div class="kicker">How the prompt is assembled</div>
+    <h2 class="title md"><code>CLAUDE.md</code>は「必要時に検索される資料」ではなく、<br>初期文脈に入る指示。</h2>
+    <div class="pipe">
+      <div class="inputs">
+        <div class="ip reveal d1"><div class="ip-name">settings.json</div><div class="ip-desc">許可・拒否・環境設定をプロセス起動時に固定</div></div>
+        <div class="ip reveal d2"><div class="ip-name">CLAUDE.md</div><div class="ip-desc">毎セッションの初期文脈に全文注入</div></div>
+        <div class="ip reveal d3"><div class="ip-name">.claude/rules/*.md</div><div class="ip-desc">領域別・条件付きルール</div></div>
+      </div>
+      <div class="arrow-col reveal d4"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 32 L52 32 M40 20 L52 32 L40 44"/></svg></div>
+      <div class="output reveal d5">
+        <div class="out-label">Claude execution context</div>
+        <div class="out-title">初期文脈 + 会話 + ツール</div>
+        <ul class="out-bullets">
+          <li>近い階層の設定が優先</li>
+          <li><code>CLAUDE.md</code>は全文注入 → 短く保つ</li>
+          <li>合算で文字数上限 (外部解析)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 9 — 情報の寿命 -->
+<section class="slide" id="s9" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="09">
+    <div class="kicker">Lifespan of information</div>
+    <h2 class="title md">情報は「いつ読まれるか」と「いつまで残るか」で分類する。</h2>
+    <div class="lifespan">
+      <div class="ls"><div class="ls-name">CLAUDE.md</div><div class="ls-when">Session Start</div><div class="ls-for">常時守る方針</div><div class="ls-life"><span>persistent</span><div class="bar" style="--w:95%"></div></div></div>
+      <div class="ls"><div class="ls-name">settings.json</div><div class="ls-when">Process Boot</div><div class="ls-for">権限・環境設定</div><div class="ls-life"><span>persistent</span><div class="bar" style="--w:90%"></div></div></div>
+      <div class="ls"><div class="ls-name">docs/</div><div class="ls-when">On Demand</div><div class="ls-for">長い仕様・作業状態</div><div class="ls-life"><span>mid-term</span><div class="bar" style="--w:55%"></div></div></div>
+      <div class="ls"><div class="ls-name">会話履歴</div><div class="ls-when">Every Turn</div><div class="ls-for">作業中の文脈</div><div class="ls-life"><span>volatile</span><div class="bar" style="--w:20%"></div></div></div>
+    </div>
+    <p class="axiom" style="margin-top:36px">同じ「設定ファイル」でも、<em>読まれるタイミング</em>と<em>残る寿命</em>が違う。設計する単位を間違えない。</p>
+  </div>
+</section>
+
+<!-- Slide 10 — CLAUDE.mdの設計 -->
+<section class="slide" id="s10" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="10">
+    <div class="kicker">CLAUDE.md Design</div>
+    <h2 class="title sm"><code>CLAUDE.md</code>は<em style="color:var(--brand);font-style:normal">毎回守る判断基準</em>に絞り、長い情報は参照先へ逃がす。</h2>
+    <div class="roles">
+      <div class="role reveal d1">
+        <span class="role-tag">CLAUDE.md</span>
+        <h3>常時守るプロジェクト方針</h3>
+        <ul>
+          <li>作業前後の基本動作</li>
+          <li>チームで揃えたい判断基準</li>
+          <li>例：バグ修正時は回帰テストを追加</li>
+          <li>短く、強く、行動に直結させる</li>
+        </ul>
+      </div>
+      <div class="role reveal d2">
+        <span class="role-tag">.claude/rules/</span>
+        <h3>領域別・条件付きルール</h3>
+        <ul>
+          <li>API変更時の入力検証</li>
+          <li>テスト追加・実行ルール</li>
+          <li>frontend / backend / db など領域別</li>
+          <li><code>paths:</code>で対象範囲を絞る</li>
+        </ul>
+      </div>
+      <div class="role reveal d3">
+        <span class="role-tag">docs/</span>
+        <h3>必要時に読ませる資料</h3>
+        <ul>
+          <li>ADRなど設計判断</li>
+          <li>現在の作業状態</li>
+          <li>既知の地雷・引き継ぎ</li>
+          <li>長い仕様・賞味期限つき情報</li>
+        </ul>
+      </div>
+    </div>
+    <p class="axiom">短く、強く、<em>行動に直結させる</em>書き方をする。</p>
+  </div>
+</section>
+
+<!-- Slide 11 — 自然言語指示と機械的制御 -->
+<section class="slide" id="s11" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="11">
+    <div class="kicker">Persuasion vs. Enforcement</div>
+    <h2 class="title md"><code>CLAUDE.md</code>は<em style="color:var(--brand);font-style:normal">お願い</em>、<code>settings.json</code>は<em style="color:var(--brand);font-style:normal">制御</em>。</h2>
+    <div class="matrix">
+      <div class="mh">種類</div><div class="mh">例</div><div class="mh">向いていること</div>
+      <div class="mc lbl">CLAUDE.md / rules</div><div class="mc">テスト方針</div><div class="mc">判断基準</div>
+      <div class="mc lbl">settings.json</div><div class="mc">.envへの読み取り拒否</div><div class="mc">権限・禁止</div>
+      <div class="mc lbl">Hooks</div><div class="mc">編集後 format</div><div class="mc">必ず実行</div>
+    </div>
+    <p class="msg" style="margin-top:20px">絶対に守らせたいことを自然言語だけに頼るのは危険。<br>第3部のHooksで回収する伏線として記憶しておく。</p>
+  </div>
+</section>
+
+<!-- Slide 12 — CLAUDE.mdの設計原則 -->
+<section class="slide" id="s12" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="12">
+    <div class="kicker">Three Design Principles</div>
+    <h2 class="title md">良い<code>CLAUDE.md</code>は<em style="color:var(--brand);font-style:normal">短い</em>・<em style="color:var(--brand);font-style:normal">具体的</em>・<em style="color:var(--brand);font-style:normal">腐りにくい</em>。</h2>
+    <div class="principles">
+      <div class="prin reveal d1"><span class="glyph tabular">I.</span><h3>短い</h3><p>常時入れる価値がある情報だけを置く。</p><div class="prin-ex"><span class="ng">念のため全部書く</span><span class="ok">100行を超えない</span></div></div>
+      <div class="prin reveal d2"><span class="glyph tabular">II.</span><h3>具体的</h3><p>抽象的な価値観ではなく、行動に直結する文を書く。</p><div class="prin-ex"><span class="ng">品質を大切にする</span><span class="ok">バグ修正には回帰テストを追加</span></div></div>
+      <div class="prin reveal d3"><span class="glyph tabular">III.</span><h3>腐りにくい</h3><p>変わりやすい詳細はファイル参照先へ逃がす。</p><div class="prin-ex"><span class="ng">作業状態を直接書く</span><span class="ok"><code>docs/ai/current-state.md</code> を参照</span></div></div>
+    </div>
+    <p class="axiom" style="margin-top:32px">「念のため全部書く」は悪手。重要な指示が埋もれる。</p>
+  </div>
+</section>
+
+<!-- Slide 13 — Bad / Good Rules -->
+<section class="slide" id="s13" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="13">
+    <div class="kicker">Bad / Good</div>
+    <h2 class="title md">曖昧な価値観より、<em style="color:var(--brand);font-style:normal">観測可能な行動</em>を書く。</h2>
+    <div class="ba">
+      <div class="col bad">
+        <div class="label">Bad</div>
+        <ul>
+          <li>品質を大切にする</li>
+          <li>テストは重要</li>
+          <li>セキュリティに気をつける</li>
+          <li>分かりやすいコードを書く</li>
+        </ul>
+        <div class="ba-why">解釈が人によって違い、観測できない。</div>
+      </div>
+      <div class="col good">
+        <div class="label">Good</div>
+        <ul>
+          <li>バグ修正には回帰テストを追加</li>
+          <li>テスト未実行なら理由を書く</li>
+          <li>外部入力は<code>zod</code>で検証してから処理</li>
+          <li>関数は引数3つ以内、超えるならobject化</li>
+        </ul>
+        <div class="ba-why">差分やレビューで「守った／守ってない」を判定できる。</div>
+      </div>
+    </div>
+    <p class="msg" style="margin-top:20px">自分のプロジェクトのルールを、この粒度まで降ろせるか?</p>
+  </div>
+</section>
+
+<!-- Slide 14 — 置き場所の判断 -->
+<section class="slide" id="s14" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="14">
+    <div class="kicker">Where to place it</div>
+    <h2 class="title md">「何を書くか」より先に<em style="color:var(--brand);font-style:normal">「どこに置くか」</em>を決める。</h2>
+    <table class="tbl place">
+      <thead><tr><th style="width:34%">やりたいこと</th><th style="width:30%">置き場所</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>計画を出してほしい</td><td><code>CLAUDE.md</code></td><td>毎回守る行動方針</td></tr>
+        <tr><td>API変更時に入力検証</td><td><code>rules/api.md</code></td><td>領域別ルール（pathsで限定）</td></tr>
+        <tr><td><code>.env</code>を読ませたくない</td><td><code>settings.json</code></td><td>権限制御（自然言語では弱い）</td></tr>
+        <tr><td><code>rm -rf</code>をブロック</td><td><code>settings.json</code> / <code>PreToolUse</code></td><td>実行直前に止める必要</td></tr>
+        <tr><td>formatを忘れたくない</td><td>Hook (<code>PostToolUse</code>)</td><td>編集後の機械処理</td></tr>
+        <tr><td>大量ログを調査させたい</td><td>Subagent</td><td>メイン会話を汚さない</td></tr>
+      </tbody>
+    </table>
+    <p class="msg" style="margin-top:16px">迷ったら<strong>判断基準 / 領域別 / 権限制御 / 自動処理 / 隔離</strong>のどれかで分ける。</p>
+  </div>
+</section>
+
+<!-- Slide 15 — 章末問題：どこに置く？ -->
+<section class="slide" id="s15" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="15">
+    <div class="kicker">Exercise — Part 1</div>
+    <h2 class="title sm">やりたいことごとに、置き場所を選んでみる。</h2>
+    <div class="quiz-cases">
+      <div class="quiz-case"><div class="scenario">実装前に計画を出してほしい</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+      <div class="quiz-case"><div class="scenario">APIファイル変更時は入力検証してほしい</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+      <div class="quiz-case"><div class="scenario"><code>.env</code>を絶対に読ませたくない</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+      <div class="quiz-case"><div class="scenario"><code>rm -rf</code>をブロックしたい</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+      <div class="quiz-case"><div class="scenario">編集後にprettierを走らせたい</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+      <div class="quiz-case"><div class="scenario">応答終了時にテスト未実行を検査したい</div><div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 16 — 答え合わせ -->
+<section class="slide" id="s16" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="16">
+    <div class="kicker">Exercise — Part 1 — Answers</div>
+    <h2 class="title sm">置き場所は<em style="color:var(--brand);font-style:normal">判断基準 / 領域別 / 権限 / 自動実行</em>で分ける。</h2>
+    <div class="quiz-cases">
+      <div class="quiz-case has-answer">
+        <div class="scenario">実装前に計画を出してほしい</div>
+        <div class="pick"><span class="p ok">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div>
+        <div class="reason">行動方針なので<code>CLAUDE.md</code>または<code>rules/workflow.md</code>に置く</div>
+      </div>
+      <div class="quiz-case has-answer">
+        <div class="scenario">APIファイル変更時は入力検証してほしい</div>
+        <div class="pick"><span class="p">CLAUDE.md</span><span class="p ok">rules/</span><span class="p">settings.json</span><span class="p">Hook</span></div>
+        <div class="reason">領域別ルール。<code>rules/api.md</code>に<code>paths:</code>で対象を絞る</div>
+      </div>
+      <div class="quiz-case has-answer">
+        <div class="scenario"><code>.env</code>を絶対に読ませたくない</div>
+        <div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p ok">settings.json</span><span class="p">Hook</span></div>
+        <div class="reason">自然言語の禁止指示は弱い。<code>settings.json</code>で機械的に拒否</div>
+      </div>
+      <div class="quiz-case has-answer">
+        <div class="scenario"><code>rm -rf</code>をブロックしたい</div>
+        <div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p ok">settings.json</span><span class="p ok">Hook</span></div>
+        <div class="reason">実行直前に止める。<code>settings.json</code>または<code>PreToolUse</code> Hook</div>
+      </div>
+      <div class="quiz-case has-answer">
+        <div class="scenario">編集後にprettierを走らせたい</div>
+        <div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p ok">Hook</span></div>
+        <div class="reason">編集後の機械処理。<code>PostToolUse</code> Hookで自動実行</div>
+      </div>
+      <div class="quiz-case has-answer">
+        <div class="scenario">応答終了時にテスト未実行を検査したい</div>
+        <div class="pick"><span class="p">CLAUDE.md</span><span class="p">rules/</span><span class="p">settings.json</span><span class="p ok">Hook</span></div>
+        <div class="reason">終了前チェック。<code>Stop</code> Hookで応答完了時に走らせる</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 17 — 第1部ワーク -->
+<section class="slide" id="s17" data-section="Part 1 · Input Design">
+  <div class="slide-inner" data-num="17">
+    <div class="kicker">Hands-on · Part 1</div>
+    <h2 class="title md">自分のプロジェクトなら、どの情報をどこに置くか設計する。</h2>
+    <div class="steps">
+      <div class="step reveal d1"><div class="n tabular">01</div><div><h3>常時守らせたいルールを3つ書く</h3><p>毎回のセッションに効かせる、行動に直結する文だけを選ぶ。</p><p class="step-cue">合図: 「品質を大切にする」のような曖昧文を見つけたら、観測可能な行動に書き直す。</p></div></div>
+      <div class="step reveal d2"><div class="n tabular">02</div><div><h3>長い説明を <code>docs/</code> 参照に分ける</h3><p>仕様・作業状態・地雷情報を分離し、<code>CLAUDE.md</code>からポインタする。</p><p class="step-cue">合図: <code>CLAUDE.md</code>が100行を超えたら、賞味期限のある記述を <code>docs/ai/*</code> へ退避。</p></div></div>
+      <div class="step reveal d3"><div class="n tabular">03</div><div><h3>自然言語では弱い制御を洗い出す</h3><p>権限・禁止・必ず実行系を <code>settings.json</code> / Hooks に寄せる候補にする。</p><p class="step-cue">合図: 「絶対に〜してほしい」「毎回〜」と書きたくなったら、機械的制御へ移す候補。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Slide 18 — Part 2 Divider
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="slide section-slide" id="s18" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="18">
+    <div class="section-grid">
+      <div class="section-num tabular reveal">2</div>
+      <div class="section-rail reveal d1"></div>
+      <div>
+        <div class="section-eyebrow reveal d2">第2部</div>
+        <h2 class="section-title reveal d3">会話が長くなると<br>なぜ壊れるか</h2>
+        <p class="section-sub reveal d4">会話が長くなるほど、情報は増え、削られ、劣化する。</p>
+        <div class="section-rule reveal d5"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 19 — よくある状況 (long conv) -->
+<section class="slide" id="s19" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="19">
+    <div class="kicker">Common Symptoms</div>
+    <h2 class="title md">長い会話は、続けるほど<em style="color:var(--brand);font-style:normal">「賢くなる」とは限らない</em>。</h2>
+    <div class="floating tabular">N+1</div>
+    <div class="pile">
+      <div class="obs reveal d1"><span class="q">a.</span><span class="t">途中で言うことを聞かなくなる</span></div>
+      <div class="obs reveal d2"><span class="q">b.</span><span class="t">すぐ上限オーバーが来る</span></div>
+      <div class="obs reveal d3"><span class="q">c.</span><span class="t">「さっき見たwarning」という言い方が通じない</span></div>
+      <div class="obs reveal d4"><span class="q">d.</span><span class="t">似た情報に引っ張られる</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 20 — 第2部の問い -->
+<section class="slide" id="s20" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="20">
+    <div class="kicker">Part 2 Inquiry</div>
+    <h2 class="title md">コンテキスト問題は<em style="color:var(--brand);font-style:normal">容量 / 品質 / 運用</em>に分けて対策する。</h2>
+    <div class="triple">
+      <div class="tri reveal d1"><div class="tri-cap">Capacity</div><h3>容量</h3><p class="tri-lead">入れすぎると打ち切り・ノイズ。</br><code>CLAUDE.md</code>や<code>MEMORY.md</code>にも上限がある。</p><ul><li>上限</li><li>圧縮</li><li>削除</li></ul><div class="tri-fix">→ 短く設計し、必要時参照に分ける</div></div>
+      <div class="tri reveal d2"><div class="tri-cap">Quality</div><h3>品質</h3><p class="tri-lead">収まっていても、長くなるほど</br>指示遵守と推論品質が落ちる。</p><ul><li>要約漏れ</li><li>古い前提</li><li>類似ノイズ</li></ul><div class="tri-fix">→ <code>/compact</code>で整理、重要情報を再注入</div></div>
+      <div class="tri reveal d3"><div class="tri-cap">Operation</div><h3>運用</h3><p class="tri-lead">長い会話を節目で整理し、汚れた履歴を断ち切る。</p><ul><li>圧縮</li><li>リセット</li><li>分割</li></ul><div class="tri-fix">→ <code>/compact</code>・<code>/clear</code>・Subagentを使い分ける</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 21 — 初回から重い -->
+<section class="slide" id="s21" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="21">
+    <div class="kicker">Heavy from the start</div>
+    <h2 class="title md">最初に入れすぎると、<em style="color:var(--brand);font-style:normal">会話が始まる前から不利になる</em>。</h2>
+    <div class="weight">
+      <div class="wh">対象</div><div class="wh">推定上限</div><div class="wh">リスク</div>
+      <div class="wc lbl">CLAUDE.md</div>
+      <div class="wc"><div class="meter"><div class="bar"><i style="width:80%"></i></div><span>4,000 / 12,000字</span></div></div>
+      <div class="wc">打ち切り・ノイズ化（外部解析）</div>
+      <div class="wc lbl">MEMORY.md</div>
+      <div class="wc"><div class="meter"><div class="bar"><i style="width:60%"></i></div><span>先頭200行 / 25KB</span></div></div>
+      <div class="wc">古い学習メモが混ざる（公式）</div>
+      <div class="wc lbl">Tool definitions</div>
+      <div class="wc"><div class="meter"><div class="bar"><i style="width:30%"></i></div><span>core 8 inline</span></div></div>
+      <div class="wc">判断負荷が増える（公式）</div>
+    </div>
+    <p class="footnote">※ <code>CLAUDE.md</code>上限は外部解析ベース。MEMORY.mdとツール定義は公式情報として扱う。</p>
+  </div>
+</section>
+
+<!-- Slide 22 — Deferred Tools -->
+<section class="slide" id="s22" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="22">
+    <div class="kicker">Deferred Tools</div>
+    <h2 class="title md">ツール定義も<em style="color:var(--brand);font-style:normal">必要になるまで遅延ロード</em>する方向に進んでいる。</h2>
+    <div class="deferred">
+      <div class="stage reveal d1"><div class="num tabular">1</div><div><h3>コアツールだけ最初から入れる</h3><p>Read / Edit / Bash / Glob などの中核ツールのみinline。</p></div></div>
+      <div class="stage reveal d2"><div class="num tabular">2</div><div><h3>それ以外は名前だけ見せる</h3><p>多数のMCP/拡張ツールはまずschemaを持たない名前一覧として提示。</p></div></div>
+      <div class="stage reveal d3"><div class="num tabular">3</div><div><h3>必要になったらschemaを取りに行く</h3><p>ToolSearchなどで該当schemaを取得して初めて完全な引数構造が文脈へ入る。</p></div></div>
+    </div>
+    <div class="principle reveal d4"><span class="label">Design思想</span><span class="text">何でも最初から入れない。</span></div>
+  </div>
+</section>
+
+<!-- Slide 23 — 会話履歴は増幅する -->
+<section class="slide" id="s23" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="23">
+    <div class="kicker">Conversation accumulates</div>
+    <h2 class="title md">会話を続けるほど、<em style="color:var(--brand);font-style:normal">ユーザー発言・応答・tool result</em>が積み上がる。</h2>
+    <div class="stack">
+      <div class="ln"><span class="role">User</span><span class="text">"あのバグ直して"</span></div>
+      <div class="ln"><span class="role">Assistant</span><span class="text">調査を始めます…</span></div>
+      <div class="ln tool"><span class="role">Tool</span><span class="text">read_file('src/auth.rs') → 1842 lines</span></div>
+      <div class="ln tool"><span class="role">Tool</span><span class="text">bash('npm test') → 3 failures, 127 lines</span></div>
+      <div class="ln"><span class="role">Assistant</span><span class="text">こちらが原因と思われます…</span></div>
+      <div class="ln tool"><span class="role">Tool</span><span class="text">edit_file → diff applied</span></div>
+      <div class="ln tool"><span class="role">Tool</span><span class="text">bash('npm test') → 1 failure remaining</span></div>
+      <div class="ellipsis">.  .  .  .  .  .</div>
+    </div>
+    <p class="stack-cap">ファイル読み取り結果、コマンド出力、試したが失敗した修正、古い前提や寄り道。会話履歴には成功した知見だけでなく、捨て損ねたゴミも残る。</p>
+  </div>
+</section>
+
+<!-- Slide 24 — Microcompact -->
+<section class="slide" id="s24" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="24">
+    <div class="kicker">Microcompact</div>
+    <h2 class="title sm">Microcompactでは、<em style="color:var(--brand);font-style:normal">古いtool resultだけがピンポイントで削られる</em>。</h2>
+    <div class="mc-grid">
+      <div class="tl-wrap">
+        <div class="tl-axis"><span class="ax-top">古い</span><span class="ax-line"></span><span class="ax-bot">新しい</span></div>
+        <div class="timeline">
+          <div class="tl-item del"><span class="when">#1</span><span>tool: read_file('utils.ts')</span></div>
+          <div class="tl-item del"><span class="when">#2</span><span>tool: bash('grep …')</span></div>
+          <div class="tl-item del"><span class="when">#3</span><span>tool: read_file('legacy.rs')</span></div>
+          <div class="tl-item"><span class="when">#4</span><span>user: "別warningも"</span></div>
+          <div class="tl-item"><span class="when">#5</span><span>assistant: 調査結果まとめ…</span></div>
+          <div class="tl-item"><span class="when">#6</span><span>user: "let's continue"</span></div>
+          <div class="tl-item"><span class="when">#7-11</span><span>recent tool results (kept)</span></div>
+          <div class="tl-item"><span class="when">#12</span><span>user: "テスト直して" ← now</span></div>
+        </div>
+      </div>
+      <div class="mc-cap">
+        <strong>残るもの</strong>：ユーザー発言、アシスタント発言、<span class="hl">直近5件のtool result（#7〜#11）</span>。<br><br>
+        <strong>消えるもの</strong>：それ以前のtool result（#1〜#3）。<br><br>
+        必要な調査結果は <code>docs/ai/current-state.md</code> や応答本文へ退避するのが安全。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 25 — Auto-compact -->
+<section class="slide" id="s25" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="25">
+    <div class="kicker">Auto-compact</div>
+    <h2 class="title sm">Auto-compactでは、古い会話履歴が<em style="color:var(--brand);font-style:normal">別モデルで要約される</em>。</h2>
+    <div class="auto-grid">
+      <div class="panel before">
+        <div class="panel-h">圧縮前 (≈90%)</div>
+        <div class="panel-l">
+          <div class="ln">user: "認証バグ直して"</div>
+          <div class="ln">assistant: 調査します…</div>
+          <div class="ln">tool: read_file × 7</div>
+          <div class="ln">tool: bash × 4</div>
+          <div class="ln">assistant: 修正案…</div>
+          <div class="ln">user: "Also update src/cache"</div>
+          <div class="ln">…</div>
+        </div>
+      </div>
+      <div class="panel after">
+        <div class="panel-h">圧縮後</div>
+        <div class="panel-l">
+          <div class="ln summary">[summary] 12 msgs compacted: auth refactor, cache update pending…</div>
+          <div class="ln">user: "Also update src/cache"</div>
+          <div class="ln">…直近4件は保持</div>
+        </div>
+      </div>
+    </div>
+    <div class="countermeasure">compact前に「残す情報」を明示して退避する。</div>
+  </div>
+</section>
+
+<!-- Slide 26 — CLAUDE.mdの再注入 -->
+<section class="slide" id="s26" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="26">
+    <div class="kicker">After Compact</div>
+    <h2 class="title sm">圧縮後も<code>CLAUDE.md</code>は再注入されるが、<em style="color:var(--brand);font-style:normal">作業中の細かい文脈は</em><code>docs/ai/*</code><em style="color:var(--brand);font-style:normal">で補う</em>。</h2>
+    <div class="inv">
+      <div class="inv-row">
+        <div class="inv-row-tag">圧縮後も自動で残る</div>
+        <div class="inv-card primary reveal d1">
+          <h3>CLAUDE.md</h3>
+          <p>圧縮後も自動で再注入される。常時守る基本方針はここに。</p>
+        </div>
+      </div>
+      <div class="inv-row">
+        <div class="inv-row-tag">作業中の文脈は人間が補完</div>
+        <div class="inv-trio">
+          <div class="inv-card reveal d2"><h3>docs/ai/current-state.md</h3><p>今の作業状態。何を試して、次に何を。</p></div>
+          <div class="inv-card reveal d3"><h3>docs/ai/handoff.md</h3><p>セッション引き継ぎ。明日の自分への手紙。</p></div>
+          <div class="inv-card reveal d4"><h3>docs/ai/known-issues.md</h3><p>何度も踏む地雷。auto memoryに任せない。</p></div>
+        </div>
+      </div>
+      <div class="inv-row">
+        <div class="inv-row-tag">運用ルールで掃除</div>
+        <div class="inv-card reveal d5">
+          <h3>Auto-expire</h3>
+          <p>古い情報の賞味期限。定期的に清掃する。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 27 — bad autocompaction -->
+<section class="slide" id="s27" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="27">
+    <div class="kicker">Anti-pattern</div>
+    <h2 class="title sm">「さっきのあれ」は、圧縮後には<em style="color:var(--brand);font-style:normal">存在しないかもしれない</em>。</h2>
+    <div class="quote-wrap">
+      <p class="quote">さっき見た別の <em>warning</em> を直して</p>
+    </div>
+    <div class="consequences">
+      <div class="csq reveal d1"><div class="lbl">A. summaryから</div><div class="tx">該当warningの詳細が落ちている</div></div>
+      <div class="csq reveal d2"><div class="lbl">B. 指示が</div><div class="tx">「どのwarning？」と曖昧になる</div></div>
+      <div class="csq reveal d3"><div class="lbl">C. 引っ張られ</div><div class="tx">別の問題に向かってしまう</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 28 — Context Rot -->
+<section class="slide" id="s28" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="28">
+    <div class="kicker">Context Rot</div>
+    <h2 class="title sm">コンテキスト窓に収まっていても、<em style="color:var(--brand);font-style:normal">長くなるほど性能は落ちる</em>。</h2>
+    <div class="rots">
+      <div class="rot reveal d1">
+        <span class="term">01 · Lost in the Middle</span>
+        <h3>中盤の指示が見落とされる</h3>
+        <p>先頭と末尾に注意が集まり、中盤の関連情報が見落とされやすい。多段推論で顕著。</p>
+      </div>
+      <div class="rot reveal d2">
+        <span class="term">02 · Attention Dilution</span>
+        <h3>入力が長いほど<br>注意が薄まる</h3>
+        <p>O(N²)の注意計算が多くのトークンへ分散する。重要指示への集中が落ちる。</p>
+      </div>
+      <div class="rot reveal d3">
+        <span class="term">03 · Distractor Interference</span>
+        <h3>似たノイズに引っ張られる</h3>
+        <p>似た関数名、過去エラー、別テストのassertionが混線する。コーディングで特に致命的。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 29 — コーディングで起きるContext Rot -->
+<section class="slide" id="s29" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="29">
+    <div class="kicker">Rot in coding</div>
+    <h2 class="title md">関連しそうで関連しない情報は、<em style="color:var(--brand);font-style:normal">無いより悪い</em>ことがある。</h2>
+    <div class="examples">
+      <div class="ex reveal d1"><span class="ico">→</span><span class="tx">古い関数名を使ってしまう <code>userGetById()</code> ではなく <code>fetchUser()</code></span></div>
+      <div class="ex reveal d2"><span class="ico">→</span><span class="tx">別エラーの修正を当ててしまう（先週直したIssueと混線）</span></div>
+      <div class="ex reveal d3"><span class="ico">→</span><span class="tx">別テストファイルの assertion パターンを混ぜてしまう</span></div>
+    </div>
+    <p class="punchline">調査しすぎた結果、むしろ間違うことがある。</p>
+  </div>
+</section>
+
+<!-- Slide 30 — コンテキスト運用の基本 -->
+<section class="slide" id="s30" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="30">
+    <div class="kicker">Operating principles</div>
+    <h2 class="title md">長い会話は<em style="color:var(--brand);font-style:normal">「続ける」のではなく「節目で整理する」</em>。</h2>
+    <div class="checks">
+      <div class="ck reveal d1"><span class="box"></span><span class="tx">小タスクごとに <code>/compact</code><span class="ck-when">タスク完了の節目で残す情報を明示</span></span></div>
+      <div class="ck reveal d2"><span class="box"></span><span class="tx">重要情報は明示的に再注入する<span class="ck-when">summaryから落ちる前提で「これを残して」と書く</span></span></div>
+      <div class="ck reveal d3"><span class="box"></span><span class="tx">失敗ループでは <code>/clear</code><span class="ck-when">2回失敗したら、続けるより断ち切る方が速い</span></span></div>
+      <div class="ck reveal d4"><span class="box"></span><span class="tx">調査結果は <code>docs/</code> や Subagent へ逃がす<span class="ck-when">大量ファイル読み・ログ調査はメイン会話を汚さない</span></span></div>
+    </div>
+    <p class="axiom" style="margin-top:32px">人間の作業でも、調査・実装・レビューを同じメモに積むと混乱する。<em>節目を作る</em>のが先。</p>
+  </div>
+</section>
+
+<!-- Slide 31 — /compact と /clear -->
+<section class="slide" id="s31" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="31">
+    <div class="kicker">/compact vs /clear</div>
+    <h2 class="title md"><code>/compact</code>は<em style="color:var(--brand);font-style:normal">残すため</em>、<code>/clear</code>は<em style="color:var(--brand);font-style:normal">断ち切るため</em>に使う。</h2>
+    <div class="vs">
+      <div class="vp compact">
+        <div class="lbl">Keep</div>
+        <div class="cmd">/compact</div>
+        <div class="verdict">必要情報を残して圧縮</div>
+        <ul><li>小タスク完了直後</li><li>会話が長くなってきた</li><li>同じテーマを続けたい</li></ul>
+      </div>
+      <div class="vs-mid">VS</div>
+      <div class="vp">
+        <div class="lbl">Cut</div>
+        <div class="cmd">/clear</div>
+        <div class="verdict">失敗履歴を断ち切る</div>
+        <ul><li>別タスクへ移る</li><li>2回失敗した</li><li>履歴がノイズになっている</li></ul>
+      </div>
+    </div>
+    <pre class="recipe">/compact APIの変更点、触ったファイル、未解決のテスト失敗、次にやることを残して</pre>
+  </div>
+</section>
+
+<!-- Slide 32 — 分岐と再開 -->
+<section class="slide" id="s32" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="32">
+    <div class="kicker">Branch / Resume</div>
+    <h2 class="title md">会話は<em style="color:var(--brand);font-style:normal">「続ける」「戻る」「分ける」</em>を使い分ける。</h2>
+    <div class="branches">
+      <div class="br reveal d1"><span class="c">--continue</span><span class="use"><strong>昨日の続き</strong>直前セッションをそのまま再開</span></div>
+      <div class="br reveal d2"><span class="c">--resume</span><span class="use"><strong>特定セッションに戻る</strong>過去の作業ポイントへ巻き戻る</span></div>
+      <div class="br reveal d3"><span class="c">/branch </br>/fork</span><span class="use"><strong>別案を安全に試す</strong>本流を汚さず実験する</span></div>
+      <div class="br reveal d4"><span class="c">/rewind</span><span class="use"><strong>会話と変更を巻き戻す</strong>失敗した実験を取り消す</span></div>
+    </div>
+    <div class="guide-flow">
+      <div class="gf-q">いつ何を選ぶ?</div>
+      <div class="gf-row"><span class="gf-if">時間を空けて再開</span><span class="gf-arrow">→</span><span class="gf-then"><code>--continue</code> / <code>--resume</code></span></div>
+      <div class="gf-row"><span class="gf-if">成功状態を残して別案を試す</span><span class="gf-arrow">→</span><span class="gf-then"><code>/branch</code> / <code>/fork</code></span></div>
+      <div class="gf-row"><span class="gf-if">直前の変更ごと取り消したい</span><span class="gf-arrow">→</span><span class="gf-then"><code>/rewind</code></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 33 — 便利コマンドの使いどころ -->
+<section class="slide" id="s33" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="33">
+    <div class="kicker">Utility commands</div>
+    <h2 class="title md">会話を汚さず、<em style="color:var(--brand);font-style:normal">戻れる状態</em>を作るための補助コマンド。</h2>
+    <div class="util">
+      <div class="u reveal d1">
+        <span class="c">/btw</span>
+        <span class="r">寄り道質問</span>
+        <span class="w">実装と関係ない確認を、メイン履歴に残さず通せる。</span>
+        <div class="when"><span class="when-h">こんな時</span>「ちょっと聞きたいけど、本筋を汚したくない」</div>
+      </div>
+      <div class="u reveal d2">
+        <span class="c">/recap</span>
+        <span class="r">前回までを要約</span>
+        <span class="w">翌朝の作業再開時に、これまでの文脈を取り戻す。</span>
+        <div class="when"><span class="when-h">こんな時</span>明日の自分への引き継ぎが必要</div>
+      </div>
+      <div class="u reveal d3">
+        <span class="c">/branch /fork</span>
+        <span class="r">会話を分岐</span>
+        <span class="w">成功した状態を残したまま、別案を安全に試す。</span>
+        <div class="when"><span class="when-h">こんな時</span>「この実装で良いか、別案も比較したい」</div>
+      </div>
+      <div class="u reveal d4">
+        <span class="c">/rewind</span>
+        <span class="r">巻き戻す</span>
+        <span class="w">失敗した実験を、会話と変更ごと取り消す。</span>
+        <div class="when"><span class="when-h">こんな時</span>「やっぱり数手前に戻したい」</div>
+      </div>
+      <div class="u reveal d5">
+        <span class="c">/ultrareview</span>
+        <span class="r">厳しめレビュー</span>
+        <span class="w">commit前の最終確認を、厳格モードで通す。</span>
+        <div class="when"><span class="when-h">こんな時</span>本番反映直前のエッジケース確認</div>
+      </div>
+    </div>
+    <div class="takeaway"><span class="ta-em">長い1本の会話に全部を詰め込まない。</span>用途に応じてコマンドを使い分け、メイン履歴を綺麗に保つ。</div>
+  </div>
+</section>
+
+<!-- Slide 34 — モデルと思考レベル -->
+<section class="slide" id="s34" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="34">
+    <div class="kicker">Model &amp; Effort</div>
+    <h2 class="title md"><em style="color:var(--brand);font-style:normal">軽作業は軽く</em>、<em style="color:var(--brand);font-style:normal">判断が重い作業は深く</em>考えさせる。</h2>
+    <div class="levels">
+      <div class="lev">
+        <div class="icon"><span class="b tabular">L</span><h3>Light</h3></div>
+        <p>リネーム、文言修正、単純生成。</br>軽めのモデル・浅い思考で十分。</p>
+        <div class="ex">/model haiku · /effort low</div>
+      </div>
+      <div class="lev deep">
+        <div class="icon"><span class="b tabular">H</span><h3>Heavy</h3></div>
+        <p>設計判断、複数ファイル変更、セキュリティ。</br>上位モデル・深い思考で確度を上げる。</p>
+        <div class="ex">/model opus · /effort high</div>
+      </div>
+    </div>
+    <div class="switch"><code>/model</code> と <code>/effort</code> をタスク別に使い分ける</div>
+  </div>
+</section>
+
+<!-- Slide 35 — 第2部ワーク -->
+<section class="slide" id="s35" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="35">
+    <div class="kicker">Exercise — Part 2</div>
+    <h2 class="title md">会話を切るタイミングを、<em style="color:var(--brand);font-style:normal">コマンド選択として判断</em>する。</h2>
+    <div class="cases">
+      <div class="case"><div class="scenario">小タスクが終わった</div><div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div></div>
+      <div class="case"><div class="scenario">同じ修正に2回失敗した</div><div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div></div>
+      <div class="case"><div class="scenario">昨日の作業を再開したい</div><div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div></div>
+      <div class="case"><div class="scenario">成功状態から別案を試したい</div><div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div></div>
+      <div class="case"><div class="scenario">完全に別タスクへ移る</div><div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 35-Answer — 答え合わせ -->
+<section class="slide" id="s35a" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="36">
+    <div class="kicker">Exercise — Part 2 — Answers</div>
+    <h2 class="title md"><em style="color:var(--brand);font-style:normal">残すか、断ち切るか、続けるか、分けるか</em>で判断する。</h2>
+    <div class="cases">
+      <div class="case has-answer">
+        <div class="scenario">小タスクが終わった</div>
+        <div class="pick"><span class="p ok">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div>
+        <div class="reason">必要情報を残して圧縮。後続作業に使う観点を明示する</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">同じ修正に2回失敗した</div>
+        <div class="pick"><span class="p">/compact</span><span class="p ok">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div>
+        <div class="reason">失敗履歴がノイズ化している。続けるより断ち切る方が速い</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">昨日の作業を再開したい</div>
+        <div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p ok">--continue</span><span class="p">/branch</span></div>
+        <div class="reason">直前セッションをそのまま再開。文脈ごと取り戻す</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">成功状態から別案を試したい</div>
+        <div class="pick"><span class="p">/compact</span><span class="p">/clear</span><span class="p">--continue</span><span class="p ok">/branch</span></div>
+        <div class="reason">本流を汚さず実験。失敗してもメイン会話に影響しない</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">完全に別タスクへ移る</div>
+        <div class="pick"><span class="p">/compact</span><span class="p ok">/clear</span><span class="p">--continue</span><span class="p">/branch</span></div>
+        <div class="reason">前タスクの文脈は不要。新しい話題はクリーンに始める</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Slide 36 — Part 3 Divider
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="slide section-slide" id="s36" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="37">
+    <div class="section-grid">
+      <div class="section-num tabular reveal">3</div>
+      <div class="section-rail reveal d1"></div>
+      <div>
+        <div class="section-eyebrow reveal d2">第3部</div>
+        <h2 class="section-title reveal d3">自然言語指示の限界を<br>どう超えるか</h2>
+        <p class="section-sub reveal d4">自然言語だけで守れないものは、仕組みに逃がす。</p>
+        <div class="section-rule reveal d5"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 37 — よくある状況 (limits) -->
+<section class="slide" id="s37" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="38">
+    <div class="kicker">Common Frustrations</div>
+    <h2 class="title md">毎回の手作業やコピペは、<em style="color:var(--brand);font-style:normal">拡張機能へ逃がす候補</em>。</h2>
+    <div class="pains">
+      <div class="pain reveal d1"><span class="ic">✎</span><span class="tx">コミットメッセージを毎回手で書く</span></div>
+      <div class="pain reveal d2"><span class="ic">!</span><span class="tx"><code>.env</code>を読まれそうで怖い</span></div>
+      <div class="pain reveal d3"><span class="ic">↺</span><span class="tx">formatterを走らせ忘れる</span></div>
+      <div class="pain reveal d4"><span class="ic">⇄</span><span class="tx">外部ツールの情報をコピペする</span></div>
+      <div class="pain reveal d5"><span class="ic">▌</span><span class="tx">大量ログで会話が汚れる</span></div>
+    </div>
+    <div class="arrow-hint">↓ これらは「プロンプト改善」では超えられない</div>
+  </div>
+</section>
+
+<!-- Slide 38 — 5つの限界 -->
+<section class="slide" id="s38" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="39">
+    <div class="kicker">Five limits of natural language</div>
+    <h2 class="title md">自然言語指示の限界は<em style="color:var(--brand);font-style:normal">5種類に分解</em>できる。</h2>
+    <div class="limits">
+      <div class="lim reveal d1" data-n="01"><h3>再現性</h3><p>同じ指示でも結果がバラつく</p><div class="red"></div><div class="lim-fix">→ <strong>Skills</strong></div></div>
+      <div class="lim reveal d2" data-n="02"><h3>外部接続</h3><p>DBやSaaSへ自律的にアクセスできない</p><div class="red"></div><div class="lim-fix">→ <strong>MCP</strong></div></div>
+      <div class="lim reveal d3" data-n="03"><h3>決定性</h3><p>「必ず守る」という保証はできない</p><div class="red"></div><div class="lim-fix">→ <strong>Hooks</strong></div></div>
+      <div class="lim reveal d4" data-n="04"><h3>単一スレッド</h3><p>複数会話を横断できない</p><div class="red"></div><div class="lim-fix">→ <strong>Subagents</strong></div></div>
+      <div class="lim reveal d5" data-n="05"><h3>組織最適</h3><p>個人の知見が組織知に変換されない</p><div class="red"></div><div class="lim-fix">→ <strong>Plugins</strong></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 39 — 拡張機能の地図 -->
+<section class="slide" id="s39" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="40">
+    <div class="kicker">Limit → Tool Map</div>
+    <h2 class="title md">拡張機能は<em style="color:var(--brand);font-style:normal">「限界に対する逃がし先」</em>として理解する。</h2>
+    <div class="map">
+      <div class="mcell"><div class="limit">再現性</div><div class="arr">↓</div><div class="tool">Skills</div><div class="essence">作業の再利用</div><div class="example">例: 週次レポート手順</div></div>
+      <div class="mcell"><div class="limit">外部接続</div><div class="arr">↓</div><div class="tool">MCP</div><div class="essence">情報・機能の外部化</div><div class="example">例: GitHub / Sentry 連携</div></div>
+      <div class="mcell"><div class="limit">決定性</div><div class="arr">↓</div><div class="tool">Hooks</div><div class="essence">必ず実行</div><div class="example">例: 編集後 prettier</div></div>
+      <div class="mcell"><div class="limit">単一スレッド</div><div class="arr">↓</div><div class="tool">Subagents</div><div class="essence">分業・隔離</div><div class="example">例: 大量ログ調査の隔離</div></div>
+      <div class="mcell"><div class="limit">組織共有</div><div class="arr">↓</div><div class="tool">Plugins</div><div class="essence">チーム配布</div><div class="example">例: PR用標準ワークフロー</div></div>
+    </div>
+    <p class="axiom" style="margin-top:32px">機能名から入ると散らかる。<em>どの限界を超えたいか</em>から選ぶと、使う機能は自然に決まる。</p>
+  </div>
+</section>
+
+<!-- Slide 40 — Skills -->
+<section class="slide" id="s40" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="41">
+    <div class="kicker">Skills</div>
+    <h2 class="title md">Skillsは<em style="color:var(--brand);font-style:normal">毎回貼っている手順</em>を再利用可能な部品にする仕組み。</h2>
+    <div class="skill-vis">
+      <div class="pile-before">
+        <div class="p">"いつもの定例レポートの書き方は…"</div>
+        <div class="p">"前回と同じフォーマットで…"</div>
+        <div class="p">"レビュー観点はあの5項目で…"</div>
+        <div class="p">…</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="skill-card">
+        <div class="name">SKILL.md</div>
+        <div class="desc">週次KPIレポートを生成。<br>月曜朝の定例MTG前資料作成に使う。<br>キーワード: 「週次」「KPI」「振り返り」</div>
+      </div>
+    </div>
+    <div class="when">
+      <div class="row">同じプロンプトを何度も貼っている</div>
+      <div class="row">作業手順を標準化したい</div>
+      <div class="row"><code>CLAUDE.md</code>が肥大化している</div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 41 — Skill品質 -->
+<section class="slide" id="s41" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="42">
+    <div class="kicker">Skill quality</div>
+    <h2 class="title sm">Skillの品質は <code>description</code> と<em style="color:var(--brand);font-style:normal">運用</em>で決まる。</h2>
+    <div class="split">
+      <div class="bg">
+        <div class="bcol">
+          <div class="lbl">× Bad</div>
+          <div class="yml">description: レポート作成</div>
+        </div>
+        <div class="gcol">
+          <div class="lbl">○ Good</div>
+          <div class="yml"><b>description:</b> 週次KPIレポートを生成。
+月曜朝の定例MTG前資料に使う。
+キーワード: 「週次」「KPI」</div>
+        </div>
+      </div>
+      <div class="ops">
+        <h4>Operations Tips</h4>
+        <ul>
+          <li>サンプル出力を入れる</li>
+          <li>自動起動を止めたいなら <code>disable-model-invocation: true</code></li>
+          <li>危険な実行は <code>disableSkillShellExecution</code></li>
+          <li>1作業1Skillから始める</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 42 — MCP -->
+<section class="slide" id="s42" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="43">
+    <div class="kicker">MCP</div>
+    <h2 class="title sm">MCPは<em style="color:var(--brand);font-style:normal">外部ツール/データソースへの接続</em>をClaude Codeに渡す仕組み。</h2>
+    <div class="topo">
+      <div class="node cc"><div class="ttl">Claude Code</div><div class="sub">main agent</div></div>
+      <div class="center">⇄<small>MCP</small></div>
+      <div class="ext">
+        <div class="e">GitHub<span class="sub">Issue/PR</span></div>
+        <div class="e">DB<span class="sub">read-only</span></div>
+        <div class="e">Logs<span class="sub">Sentry等</span></div>
+        <div class="e">SaaS<span class="sub">社内ツール</span></div>
+      </div>
+    </div>
+    <table class="tbl notes-tbl">
+      <thead><tr><th>用途</th><th>注意</th></tr></thead>
+      <tbody>
+        <tr><td>GitHub / DB / ログ / 社内ツール接続</td><td>読み取り専用から始める</td></tr>
+        <tr><td>外部情報の取得</td><td>Prompt Injectionを警戒</td></tr>
+        <tr><td>チーム共通接続</td><td><code>.mcp.json</code>をレビュー対象にする</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Slide 43 — MCPの注意点 -->
+<section class="slide" id="s43" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="44">
+    <div class="kicker">MCP risks</div>
+    <h2 class="title md">外部接続は便利だが、<em style="color:var(--brand);font-style:normal">権限とPrompt Injection</em>のリスクを持ち込む。</h2>
+    <div class="risk-grid">
+      <div class="rg reveal d1"><div class="risk">書き込み権限が強い</div><div class="arrow">→</div><div class="fix">読み取り専用から始める</div></div>
+      <div class="rg reveal d2"><div class="risk">ツールが多すぎる</div><div class="arrow">→</div><div class="fix">スキーマを絞る</div></div>
+      <div class="rg reveal d3"><div class="risk">未信頼テキスト</div><div class="arrow">→</div><div class="fix">Prompt Injectionを警戒</div></div>
+      <div class="rg reveal d4"><div class="risk">認証情報が固定化</div><div class="arrow">→</div><div class="fix"><code>headersHelper</code>等で動的取得</div></div>
+      <div class="rg reveal d5"><div class="risk">チーム共有設定</div><div class="arrow">→</div><div class="fix"><code>.mcp.json</code>をレビュー対象にする</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 44 — Hooks -->
+<section class="slide" id="s44" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="45">
+    <div class="kicker">Hooks</div>
+    <h2 class="title md">Hooksは「忘れずにやって」ではなく<em style="color:var(--brand);font-style:normal">「必ず実行する」</em>ための仕組み。</h2>
+    <div class="hooks-vis">
+      <div class="hook reveal d1"><span class="ev">PreToolUse</span><h3>危険操作を止める</h3><p>実行前に検査して、ブロック or 確認に切り替える。</p></div>
+      <div class="hook reveal d2"><span class="ev">PostToolUse</span><h3>編集後に format</h3><p>毎回のフォーマット忘れを機械的に塞ぐ。</p></div>
+      <div class="hook reveal d3"><span class="ev">Stop</span><h3>終了前に品質チェック</h3><p>テスト未実行や残課題を最後に再確認。</p></div>
+    </div>
+    <p class="principle-h">自然言語で<em>守らない指示</em>を、<em>イベントで強制</em>する</p>
+  </div>
+</section>
+
+<!-- Slide 45 — Hooksにする / しない -->
+<section class="slide" id="s45" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="46">
+    <div class="kicker">Do / Don't</div>
+    <h2 class="title md">Hooksは<em style="color:var(--brand);font-style:normal">機械的に判定できる重要処理</em>に限定する。</h2>
+    <div class="ss">
+      <div class="ssc do">
+        <div class="head">○ Hooksにする</div>
+        <ul>
+          <li>秘密情報アクセス</li>
+          <li>破壊的操作</li>
+          <li>formatter / lint</li>
+          <li>通知</li>
+        </ul>
+      </div>
+      <div class="ssc dont">
+        <div class="head">× Hooksにしない</div>
+        <ul>
+          <li>設計判断</li>
+          <li>曖昧なレビュー</li>
+          <li>毎回重いテスト</li>
+          <li>長いstdout出力</li>
+        </ul>
+      </div>
+    </div>
+    <div class="startsmall">通知・formatterのような小さいHookから始める</div>
+  </div>
+</section>
+
+<!-- Slide 46 — Subagents -->
+<section class="slide" id="s46" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="47">
+    <div class="kicker">Subagents</div>
+    <h2 class="title sm">Subagentsは<em style="color:var(--brand);font-style:normal">メイン会話を汚さず</em>に調査・レビューを任せる仕組み。</h2>
+    <div class="sub-vis">
+      <div class="topo46">
+        <div class="main-ag">Main Agent<small>main thread</small></div>
+        <div class="flow-mid">
+          <svg viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 15 H50 M40 8 L50 15 L40 22"/></svg>
+          要約だけ戻す
+        </div>
+        <div class="agents">
+          <div class="ag">log-explorer<small>大量ログ調査</small></div>
+          <div class="ag">code-reviewer<small>差分レビュー (RO)</small></div>
+          <div class="ag">security-audit<small>脆弱性チェック</small></div>
+          <div class="ag">file-searcher<small>大量ファイル探索</small></div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>設計Tips</th><th>狙い</th></tr></thead>
+        <tbody>
+          <tr><td>tools allowlistで権限を絞る</td><td>意図しない書き込みを防ぐ</td></tr>
+          <tr><td>返す形式を指定する</td><td>要約として受け取れる</td></tr>
+          <tr><td>調査と実装を分ける</td><td>メイン会話のContext Rotを抑える</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 47 — Plugins -->
+<section class="slide" id="s47" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="48">
+    <div class="kicker">Plugins</div>
+    <h2 class="title sm">Pluginsは<em style="color:var(--brand);font-style:normal">個人の工夫</em>をチームの<em style="color:var(--brand);font-style:normal">標準ワークフロー</em>にする仕組み。</h2>
+    <div class="plug-vis">
+      <div class="bundle">
+        <span class="label">Plugin Bundle</span>
+        <div class="components">
+          <span class="pc">Skills</span>
+          <span class="pc">Hooks</span>
+          <span class="pc">Agents</span>
+          <span class="pc">MCP</span>
+        </div>
+      </div>
+      <div class="stages">
+        <div class="stage"><span class="n">Stage 1</span><span class="what">standalone <code>.claude/</code></span><span class="why">個人・少人数で検証</span><ul class="plug-cp"><li>1機能ずつ動かす</li><li>失敗してもロールバックしやすい</li></ul></div>
+        <div class="stage"><span class="n">Stage 2</span><span class="what">Plugin化</span><span class="why">チーム標準にしてよいものだけ</span><ul class="plug-cp"><li>HooksやMCPはreview必須</li><li>namespace と version を固定</li></ul></div>
+        <div class="stage"><span class="n">Stage 3</span><span class="what">配布後</span><span class="why">version管理、security review、update運用</span><ul class="plug-cp"><li>更新通知とロールバック方針</li><li>個人カスタムは上書きされる前提</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 48 — ワークフロー例：PR作成 -->
+<section class="slide" id="s48" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="49">
+    <div class="kicker">Workflow Example A · PR creation</div>
+    <h2 class="title md">実務では、<em style="color:var(--brand);font-style:normal">複数の拡張機能を組み合わせて</em>ワークフローを作る。</h2>
+    <div class="wf-flow">
+      <div class="wf-step reveal d1"><span class="step-no">1</span><span class="comp">Skill</span><span class="role"><strong>PR前チェックリストを呼び出す</strong>テンプレート化された確認手順をプロジェクトに展開</span></div>
+      <div class="wf-arrow reveal d2"></div>
+      <div class="wf-step reveal d2"><span class="step-no">2</span><span class="comp">MCP GitHub</span><span class="role"><strong>Issue / PR / CI を取得</strong>関連Issueを参照し、CI結果や既存PRを把握</span></div>
+      <div class="wf-arrow reveal d3"></div>
+      <div class="wf-step reveal d3"><span class="step-no">3</span><span class="comp">Hook</span><span class="role"><strong>format / test / lint を自動実行</strong>編集後に機械的に走らせ、人間は判断に集中</span></div>
+      <div class="wf-arrow reveal d4"></div>
+      <div class="wf-step reveal d4"><span class="step-no">4</span><span class="comp">Subagent</span><span class="role"><strong>差分レビューを依頼</strong>読み取り専用agentで隔離レビュー、結果のみメインに戻す</span></div>
+      <div class="wf-result reveal d5"><span class="r-label">RESULT</span><span class="r-text">PR作成までの一連のフローが半自動で進み、人間は最終判断だけに集中できる</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 49 — ワークフロー例：障害調査 -->
+<section class="slide" id="s49" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="50">
+    <div class="kicker">Workflow Example B · Incident</div>
+    <h2 class="title md">大量情報を扱う作業ほど、<em style="color:var(--brand);font-style:normal">外部接続とコンテキスト隔離</em>が効く。</h2>
+    <div class="wf-flow">
+      <div class="wf-step reveal d1"><span class="step-no">1</span><span class="comp">MCP Sentry/Datadog</span><span class="role"><strong>エラーを取得</strong>本番ログから対象期間のエラー・スタックトレースを引き当てる</span></div>
+      <div class="wf-arrow reveal d2"></div>
+      <div class="wf-step reveal d2"><span class="step-no">2</span><span class="comp">MCP GitHub</span><span class="role"><strong>関連コードを参照</strong>該当commitと最近のPRを照らし合わせて変更点を絞り込む</span></div>
+      <div class="wf-arrow reveal d3"></div>
+      <div class="wf-step reveal d3"><span class="step-no">3</span><span class="comp">Subagent</span><span class="role"><strong>大量ログを別会話で調査</strong>メイン会話にログ全文を入れず、要約と仮説だけ戻す</span></div>
+      <div class="wf-arrow reveal d4"></div>
+      <div class="wf-step reveal d4"><span class="step-no">4</span><span class="comp">Skill</span><span class="role"><strong>分析レポートにまとめる</strong>標準フォーマットで再現手順・暫定対応・恒久対応を整理</span></div>
+      <div class="wf-result reveal d5"><span class="r-label">RESULT</span><span class="r-text">メインの会話を汚さずに大量情報を扱い、再現性のある障害レポートが残る</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 50 — 自動化の設計原則 -->
+<section class="slide" id="s50" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="51">
+    <div class="kicker">Automation principles</div>
+    <h2 class="title md">全部AIに任せるのではなく、<em style="color:var(--brand);font-style:normal">壊れにくい小さな自動化</em>から始める。</h2>
+    <div class="ds">
+      <div class="ds-card reveal d1"><span class="roman">I.</span><h3>分離</h3><p>判断と作業を切り分ける。承認は人間、下書きはAI。</p><div class="ds-eg"><span class="ds-eg-h">人間に残す:</span> 承認・本番反映・削除・権限変更</div></div>
+      <div class="ds-card reveal d2"><span class="roman">II.</span><h3>入口</h3><p>壊れにくい仕組みから選ぶ。認証が複雑なAPIより読み取り専用入口。</p><div class="ds-eg"><span class="ds-eg-h">優先:</span> read-only API → write APIは慎重に</div></div>
+      <div class="ds-card reveal d3"><span class="roman">III.</span><h3>通知</h3><p>通知先を集約する。多すぎると見なくなる。</p><div class="ds-eg"><span class="ds-eg-h">分け方:</span> 緊急 / 日次 / 週次レビューで重要度別</div></div>
+      <div class="ds-card reveal d4"><span class="roman">IV.</span><h3>起点</h3><p>5分で作れるものから始める。formatter・通知・チェックリスト。</p><div class="ds-eg"><span class="ds-eg-h">最初の1個:</span> 編集後 prettier → 失敗しても影響小</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 51 — 第3部ワーク -->
+<section class="slide" id="s51" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="52">
+    <div class="kicker">Exercise — Part 3</div>
+    <h2 class="title md">困りごとを、<em style="color:var(--brand);font-style:normal">適切な逃がし先に分類</em>する。</h2>
+    <div class="cases six">
+      <div class="case"><div class="scenario"><code>.env</code>を読ませたくない</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+      <div class="case"><div class="scenario">PR前にtest/lintを走らせたい</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+      <div class="case"><div class="scenario">コミットメッセージを定型化したい</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+      <div class="case"><div class="scenario">GitHub Issueを読ませたい</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+      <div class="case"><div class="scenario">大量ログを調査させたい</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+      <div class="case"><div class="scenario">チームに配布したい</div><div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 51a — 答え合わせ -->
+<section class="slide" id="s51a" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="53">
+    <div class="kicker">Exercise — Part 3 — Answers</div>
+    <h2 class="title md">困りごとは<em style="color:var(--brand);font-style:normal">機械的制御 / 自動化 / 外部接続 / 隔離 / 共有</em>に分ける。</h2>
+    <div class="cases six">
+      <div class="case has-answer">
+        <div class="scenario"><code>.env</code>を読ませたくない</div>
+        <div class="pick"><span class="p ok">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div>
+        <div class="reason">権限制御は機械的に拒否。<code>settings.json</code>に拒否ルールを書く</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">PR前にtest/lintを走らせたい</div>
+        <div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p ok">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div>
+        <div class="reason">必ず実行したい処理。<code>PreToolUse</code> / <code>Stop</code> Hookで自動化</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">コミットメッセージを定型化したい</div>
+        <div class="pick"><span class="p">settings.json</span><span class="p ok">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div>
+        <div class="reason">繰り返し手順を再利用。<code>SKILL.md</code>でテンプレート化</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">GitHub Issueを読ませたい</div>
+        <div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p ok">MCP</span><span class="p">Subagent</span><span class="p">Plugin</span></div>
+        <div class="reason">外部システムへの接続。MCP GitHubサーバーを設定</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">大量ログを調査させたい</div>
+        <div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p ok">Subagent</span><span class="p">Plugin</span></div>
+        <div class="reason">メイン会話を汚さない。Subagentで隔離調査し要約だけ戻す</div>
+      </div>
+      <div class="case has-answer">
+        <div class="scenario">チームに配布したい</div>
+        <div class="pick"><span class="p">settings.json</span><span class="p">Skill</span><span class="p">Hook</span><span class="p">MCP</span><span class="p">Subagent</span><span class="p ok">Plugin</span></div>
+        <div class="reason">Skills / Hooks / MCPを束ねてPlugin化し、チームに配布</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 52 — 3章のつながり -->
+<section class="slide" id="s52" data-section="Closing">
+  <div class="slide-inner" data-num="54">
+    <div class="kicker">Bringing it together</div>
+    <h2 class="title md">Claude Codeの設計は、情報を<em style="color:var(--brand);font-style:normal">入れる・整理する・外に出す</em>の3段階。</h2>
+    <div class="arc">
+      <div class="ph reveal d1"><div class="lbl">Part 1</div><h3>Input Design</h3><p>最初に渡す情報を設計する</p></div>
+      <div class="arr"><svg viewBox="0 0 36 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12 H28 M22 6 L28 12 L22 18"/></svg></div>
+      <div class="ph reveal d2"><div class="lbl">Part 2</div><h3>Context Operation</h3><p>会話中の情報を運用する</p></div>
+      <div class="arr"><svg viewBox="0 0 36 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12 H28 M22 6 L28 12 L22 18"/></svg></div>
+      <div class="ph reveal d3"><div class="lbl">Part 3</div><h3>Externalization</h3><p>限界を拡張機能へ逃がす</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 53 — 今日のまとめ -->
+<section class="slide" id="s53" data-section="Closing">
+  <div class="slide-inner" data-num="55">
+    <div class="kicker">Takeaways</div>
+    <h2 class="title md">上手く使う人は、プロンプトだけでなく<em style="color:var(--brand);font-style:normal">「置き場所」と「寿命」</em>を設計している。</h2>
+    <div class="final">
+      <div class="ft reveal d1">
+        <span class="n tabular">01</span>
+        <div class="rule"></div>
+        <h3><code>CLAUDE.md</code>は<br>短く、強く、行動に直結</h3>
+        <div class="ft-do"><span class="ft-do-h">明日やる</span>自分の <code>CLAUDE.md</code> を1度開いて、曖昧な行を1つ書き直す。</div>
+      </div>
+      <div class="ft reveal d2">
+        <span class="n tabular">02</span>
+        <div class="rule"></div>
+        <h3>長い会話は<br>節目で <code>/compact</code> や <code>/clear</code></h3>
+        <div class="ft-do"><span class="ft-do-h">明日やる</span>次の小タスクが終わったら、何を残すか書いて <code>/compact</code> を試す。</div>
+      </div>
+      <div class="ft reveal d3">
+        <span class="n tabular">03</span>
+        <div class="rule"></div>
+        <h3>必ず守らせたい処理は<br>Hooksや設定へ逃がす</h3>
+        <div class="ft-do"><span class="ft-do-h">明日やる</span><code>settings.json</code> に <code>.env</code> 拒否を1行追加してみる。</div>
+      </div>
+    </div>
+    <p class="axiom" style="margin-top:32px">「これは初期文脈の問題か、会話運用の問題か、外部化すべき問題か」と<em>分類できる</em>ようになれば十分。</p>
+  </div>
+</section>
+
+<!-- Slide 54 — Closing -->
+<section class="slide" id="s54" data-section="Closing">
+  <div class="slide-inner" data-num="56">
+    <div class="kicker">Closing</div>
+    <p class="closing-msg">良い使い方が見つかったら、<br><em>チームの知識に</em>。</p>
+    <div class="closing-meta">
+      <div class="cm reveal d1"><div class="label">Share</div><div class="text">工夫ポイントは <code>#random</code> で共有</div></div>
+      <div class="cm reveal d2"><div class="label">Translate</div><div class="text">自分の現場で使える形に変換する</div></div>
+      <div class="cm reveal d3"><div class="label">Cultivate</div><div class="text">Claude Codeの使い方も、チームで育てる</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 55 — アンケートと配布資料 -->
+<section class="slide" id="s55" data-section="Closing">
+  <div class="slide-inner" data-num="57">
+    <div class="kicker">Survey &amp; Handout</div>
+    <p class="thx">ご清聴ありがとうございました。</p>
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h">アンケート</div>
+        <div class="qr">
+          <img src="./img/qrcode_form.png" alt="アンケートQR">
+          <div class="label">スマートフォンで読み取り、<br>または <a href="https://forms.gle/CfB3Q9aVZQSVp3Uy9">フォームに回答する</a> から直接アクセス。</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">配布資料</div>
+        <ul>
+          <li><a href="./notes.html">後読み資料（notes.html）</a></li>
+          <li>スライドと同じURL配下から常時参照できます</li>
+          <li>質問・要望は社内チャットでも受付中</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="deck-footer">
+  <div class="deck-footer-meta">Claude Code · Workshop 2026</div>
+  <div class="deck-footer-controls">
+    <button class="nav-button" id="prevBtn" aria-label="Previous">‹</button>
+    <div class="slide-counter tabular"><span id="curN">01</span><span class="sep">/</span><span class="total" id="totN">55</span></div>
+    <button class="nav-button" id="nextBtn" aria-label="Next">›</button>
+  </div>
+  <div class="deck-footer-right"><kbd>←</kbd><kbd>→</kbd> Navigate</div>
+</footer>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const total = slides.length;
+  document.getElementById('totN').textContent = String(total).padStart(2, '0');
+
+  let idx = Math.max(0, slides.findIndex(s => s.classList.contains('is-active')));
+  const labelEl = document.getElementById('sectionLabel');
+  const curN = document.getElementById('curN');
+  const prev = document.getElementById('prevBtn');
+  const next = document.getElementById('nextBtn');
+
+  function show(i, push = true) {
+    i = Math.max(0, Math.min(total - 1, i));
+    slides[idx]?.classList.remove('is-active');
+    slides[i].classList.add('is-active');
+    idx = i;
+    const num = String(i + 1).padStart(2, '0');
+    curN.textContent = num;
+    labelEl.textContent = slides[i].dataset.section || '';
+    document.documentElement.style.setProperty('--deck-progress', ((i + 1) / total * 100) + '%');
+    prev.disabled = i === 0;
+    next.disabled = i === total - 1;
+    if (push) history.replaceState(null, '', '#' + (i + 1));
+    document.title = `${num} / ${slides[i].querySelector('.title, .hero-title, .section-title, .closing-msg, .thx')?.textContent.replace(/\s+/g,' ').trim() || ''} — Claude Codeを設計して使う`;
+  }
+
+  // Routing from hash
+  const hash = parseInt(location.hash.slice(1));
+  if (!isNaN(hash) && hash >= 1 && hash <= total) show(hash - 1, false);
+  else show(idx, false);
+
+  prev.addEventListener('click', () => show(idx - 1));
+  next.addEventListener('click', () => show(idx + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input,textarea,select,[contenteditable]')) return;
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(idx + 1); }
+    else if (e.key === 'Home') { e.preventDefault(); show(0); }
+    else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  // Brand mark click → slide 1
+  document.querySelector('.deck-brand')?.addEventListener('click', e => { e.preventDefault(); show(0); });
+
+  // Click on the brand title navigates to slide 1
+  window.addEventListener('hashchange', () => {
+    const h = parseInt(location.hash.slice(1));
+    if (!isNaN(h) && h >= 1 && h <= total && h - 1 !== idx) show(h - 1, false);
+  });
+})();
+</script>
+
+</body>
+</html>

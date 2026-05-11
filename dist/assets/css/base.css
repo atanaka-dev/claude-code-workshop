@@ -1,0 +1,97 @@
+/* ============================================================
+   base.css — Foundation tokens & resets
+   Editorial Tech aesthetic, Nintendo-derived red + warm neutrals
+   ============================================================ */
+
+:root {
+  /* === Brand === */
+  --brand-red:        #e60012;
+  --brand-red-deep:   #a8000d;
+  --brand-red-ink:    #5a0007;
+  --brand-red-tint:   #fdecee;
+
+  /* === Ink (text) === */
+  --ink-900: #131311;   /* headings */
+  --ink-700: #2d2b27;   /* body */
+  --ink-500: #6f6b62;   /* secondary */
+  --ink-400: #908a7e;   /* tertiary / meta */
+  --ink-300: #b8b2a5;   /* very subtle */
+
+  /* === Paper (background) === */
+  --paper:        #faf9f7;
+  --paper-card:   #ffffff;
+  --paper-sunk:   #f1ede5;     /* warm beige sunken surface */
+  --paper-ink:    #1a1916;     /* dark surface */
+  --rule:         #e8e3d8;     /* hairlines */
+  --rule-strong:  #c9c2b3;     /* stronger borders */
+
+  /* === Semantic === */
+  --ok:        #0a7c52;
+  --ok-tint:   #e6f4ed;
+  --warn:      #9d7c00;
+  --warn-tint: #fbf3d4;
+  --danger:    #cf0001;
+  --danger-tint: #fde8e8;
+
+  /* === Type === */
+  --font-jp:    "YakuHanJPs","Helvetica Neue","Hiragino Kaku Gothic ProN","Yu Gothic Medium",
+                "ヒラギノ角ゴ ProN W3",Meiryo,sans-serif;
+  --font-latin: "Helvetica Neue","Helvetica","Arial",sans-serif;
+  --font-mono:  "SFMono-Regular","JetBrains Mono",Menlo,Consolas,monospace;
+
+  /* === Motion === */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emph: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* === Layout === */
+  --gutter: 80px;
+  --slide-max: 1280px;
+}
+
+* , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-jp);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.85;
+  color: var(--ink-700);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  font-feature-settings: "palt" 0;
+}
+
+code, pre, .mono { font-family: var(--font-mono); font-feature-settings: normal; }
+
+a { color: inherit; text-decoration: none; }
+a:focus-visible { outline: 2px solid var(--brand-red); outline-offset: 2px; }
+
+/* Numeric Latin display class — for figures, dates, indices */
+.tabular {
+  font-family: var(--font-latin);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+}
+
+/* Hidden but accessible */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Generic base table (overridden in layouts) */
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; }
+
+ul, ol { padding-left: 1.2em; }
+li { margin: 0; }
+
+img, svg { display: block; max-width: 100%; }
+
+::selection { background: var(--brand-red); color: #fff; }
