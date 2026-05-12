@@ -19,7 +19,7 @@
     border-bottom: 1px solid var(--rule);
     padding: 14px 32px;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     gap: 24px;
     align-items: center;
   }
@@ -27,19 +27,6 @@
     content: ""; position: absolute; left: 0; bottom: -1px;
     width: 80px; height: 2px; background: var(--brand-red);
   }
-  .vw-back {
-    font-family: var(--font-latin);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    color: var(--ink-500);
-    padding: 8px 16px;
-    border: 1px solid var(--rule-strong);
-    border-radius: 999px;
-    text-decoration: none;
-    transition: all 0.15s var(--ease);
-  }
-  .vw-back:hover { color: var(--ink-900); border-color: var(--ink-900); }
   .vw-title {
     display: flex; align-items: center; gap: 14px;
     font-size: 15px; font-weight: 700; color: var(--ink-900);
@@ -214,7 +201,6 @@
 </head>
 <body>
 <header class="vw-header">
-  <a class="vw-back" href="./notes.html">← notes に戻る</a>
   <div class="vw-title"><span class="tag">System Prompt</span><code>claw-code_system_prompt.txt</code></div>
 </header>
 <main class="vw-main">
