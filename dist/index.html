@@ -299,14 +299,21 @@ img{display:block;max-width:100%}
 #s16 .tbl tbody td:nth-child(3){font-family:var(--font-mono);font-size:12.5px;color:var(--brand-ink);font-weight:600}
 #s16 .tbl tbody td:nth-child(3) code{background:transparent;border:none;padding:0;color:inherit}
 
-/* S17 — workshop steps */
-#s17 .step .step-cue{margin-top:8px;padding-left:14px;border-left:2px solid var(--brand);color:var(--ink-700);font-size:12.5px;line-height:1.55}
-#s17 .step .step-cue code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
-#s17 .steps{display:flex;flex-direction:column;gap:10px;margin-top:18px}
-#s17 .step{display:grid;background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;align-items:center;padding:14px 20px;gap:18px;grid-template-columns:54px 1fr}
-#s17 .step .n{font-family:var(--font-latin);font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em;font-size:34px}
-#s17 .step h3{font-weight:700;color:var(--ink-900);letter-spacing:.01em;line-height:1.45;font-size:16.5px}
-#s17 .step p{color:var(--ink-500);line-height:1.6;font-size:12.5px;margin-top:4px}
+/* S17 — Hands-on 1 (Goal / Task / Output) */
+#s17 .ho-goal{margin-top:14px;padding:14px 20px;background:var(--paper-card);border:1px solid var(--rule);border-left:3px solid var(--brand);border-radius:4px;color:var(--ink-900);font-size:14px;line-height:1.65;max-width:1100px;display:flex;align-items:baseline;gap:14px}
+#s17 .ho-goal-label{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--brand);text-transform:uppercase;flex-shrink:0}
+#s17 .ho-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;margin-top:18px}
+#s17 .ho-col{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:18px 22px;position:relative}
+#s17 .ho-col::before{content:"";position:absolute;top:0;left:0;width:48px;height:3px;background:var(--brand)}
+#s17 .ho-col .col-label{display:block;font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--brand);text-transform:uppercase;margin-bottom:12px}
+#s17 .ho-list{margin:0;padding:0;list-style:none;counter-reset:ho}
+#s17 .ho-list li{position:relative;padding-left:28px;margin:7px 0;color:var(--ink-700);font-size:13.5px;line-height:1.65}
+#s17 .ho-list.numbered li{counter-increment:ho}
+#s17 .ho-list.numbered li::before{content:counter(ho,decimal-leading-zero);position:absolute;left:0;top:.05em;font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:800;color:var(--brand);font-size:13px;letter-spacing:.02em}
+#s17 .ho-list.bulleted li::before{content:"";position:absolute;left:6px;top:.7em;width:10px;height:1px;background:var(--brand)}
+#s17 .ho-list a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px}
+#s17 .ho-list a:hover{color:var(--brand)}
+#s17 .ho-list code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
 
 /* S19 — observation pile (situational) */
 #s19 .pile .obs .q{font-family:var(--font-latin);font-size:14px;color:var(--brand);font-weight:700;font-style:italic}
@@ -1205,11 +1212,27 @@ img{display:block;max-width:100%}
 <section class="slide" id="s17" data-section="Part 1 · Input Design">
   <div class="slide-inner" data-num="17">
     <div class="kicker">Hands-on · Part 1</div>
-    <h2 class="title md">自分のプロジェクトなら、どの情報をどこに置くか設計する。</h2>
-    <div class="steps">
-      <div class="step reveal d1"><div class="n tabular">01</div><div><h3>常時守らせたいルールを3つ書く</h3><p>毎回のセッションに効かせる、行動に直結する文だけを選ぶ。</p><p class="step-cue">合図: 「品質を大切にする」のような曖昧文を見つけたら、観測可能な行動に書き直す。</p></div></div>
-      <div class="step reveal d2"><div class="n tabular">02</div><div><h3>長い説明を <code>docs/</code> 参照に分ける</h3><p>仕様・作業状態・地雷情報を分離し、<code>CLAUDE.md</code>からポインタする。</p><p class="step-cue">合図: <code>CLAUDE.md</code>が100行を超えたら、賞味期限のある記述を <code>docs/ai/*</code> へ退避。</p></div></div>
-      <div class="step reveal d3"><div class="n tabular">03</div><div><h3>自然言語では弱い制御を洗い出す</h3><p>権限・禁止・必ず実行系を <code>settings.json</code> / Hooks に寄せる候補にする。</p><p class="step-cue">合図: 「絶対に〜してほしい」「毎回〜」と書きたくなったら、機械的制御へ移す候補。</p></div></div>
+    <h2 class="title md">Hands-on 1: <em style="color:var(--brand);font-style:normal"><code style="font-size:.92em;background:transparent;border:none;padding:0;color:inherit">CLAUDE.md</code> を設計する</em></h2>
+    <p class="ho-goal reveal d1"><span class="ho-goal-label">Goal</span><span>Claude Codeが毎回迷わず作業できるように、初期文脈・参照資料・機械的制御を分ける。</span></p>
+    <div class="ho-grid">
+      <div class="ho-col reveal d2">
+        <span class="col-label">Task</span>
+        <ol class="ho-list numbered">
+          <li><a href="https://github.com/atanaka-dev/claude-code-workshop" target="_blank" rel="noopener">このリポジトリ</a>の構成を確認する</li>
+          <li><code>CLAUDE.md</code> に置くべきルールを3つ選ぶ</li>
+          <li><code>rules/</code> に分けるべき領域別ルールを2つ作る</li>
+          <li><code>docs/ai/current-state.md</code> に逃がす情報を決める</li>
+          <li><code>settings.json</code> または Hook候補にすべき制御を1つ挙げる</li>
+        </ol>
+      </div>
+      <div class="ho-col reveal d3">
+        <span class="col-label">Output</span>
+        <ul class="ho-list bulleted">
+          <li><code>CLAUDE.md</code> 改善案</li>
+          <li><code>rules/*.md</code> 改善案</li>
+          <li><code>docs/ai/current-state.md</code> 初版</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
