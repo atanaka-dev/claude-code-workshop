@@ -1,0 +1,84 @@
+# 配列型式
+
+1. [System] (圧縮要約 (コンパクション後にだけ))
+2. [User] (過去のユーザー発言)
+3. [Assistant] (過去のモデル応答)
+4. [Tool] (過去のツール結果)
+...
+x. [User] (今回のユーザー発言)
+
+
+# compactionについて
+
+## トリガー
+
+以下両方満たすと発火
+
+- 圧縮対象メッセージ数 > preserve_recent_messages(=default: 4)
+- 圧縮対象の推定トークン合計 >= max_estimated_tokens(=default: 10,000)
+
+## 圧縮対象
+
+```text
+[古い] msg1 - msg2 - msg3 - msg4 - msg5 - msg6 - msg7 - msg8 [新しい]
+       ────────────────圧縮対象──────────────  ──保護(末尾4個)──
+```
+
+## 要約のフォーマット
+
+```text
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+<summary>
+Conversation summary:
+- Scope: 12 earlier messages compacted (user=4, assistant=5, tool=3).
+- Tools mentioned: bash, edit_file, read_file.
+- Recent user requests:
+  - 認証モジュールをasync/awaitに直して
+  - キャッシュ層の設計を検討して
+  - パフォーマンスのボトルネックを分析して
+- Pending work:
+  - Next: update tests and follow up on remaining CLI polish.
+- Key files referenced: src/auth.rs, src/cache.rs, tests/auth_test.rs.
+- Current work: 認証モジュールのリファクタリングが進行中で…
+- Key timeline:
+  - user: 認証モジュールをasync/awaitに直して
+  - assistant: I will inspect the compact flow.
+  - tool: tool_result bash: ok ok ok ok ok…
+  - user: Also update src/conversation.rs
+  ...
+</summary>
+
+Recent messages are preserved verbatim. Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, and do not preface with continuation text.
+```
+
+- Scope: 何件を要約したか(役割別の内訳付き)
+- Tools mentioned: 使われたツール名(重複排除&アルファベット順)
+- Recent user requests: 最新3件のユーザー発言(各160文字まで、超過分は … で打ち切り)
+- Pending work: 「todo / next / pending / follow up / remaining」というキーワードを含むメッセージから3件抜粋
+- Key files referenced: 本文中から / を含む .rs/.ts/.tsx/.js/.json/.md 拡張子のパスを抽出(最大8個)
+- Current work: 末尾から見て最初に見つかった非空テキスト(200文字まで、超過分は …)
+- Key timeline: 全メッセージを - role: 内容 形式で時系列に並べる(各ブロックは160文字まで、超過分は …)
+
+ただし、claw-codeはAI要約が含まれていない。ClaudeCodeはAI要約が含まれるはず
+公式曰く、「古いtool outputを先にclearし、それでも必要なら会話をsummary化する」
+
+## 圧縮の連鎖(チェーン)
+
+すでに1度圧縮されたセッションが再度圧縮閾値を超える場合
+
+```text
+<summary>
+Conversation summary:
+- Previously compacted context:
+   - Scope: 12 earlier messages compacted (user=4, ...)
+   - Tools mentioned: ...
+   ...
+- Newly compacted context:
+   - Scope: 8 earlier messages compacted (user=3, ...)
+   - Tools mentioned: ...
+   ...
+- Key timeline:
+   - (新しい部分のタイムラインのみ)
+</summary>
+```
