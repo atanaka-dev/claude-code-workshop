@@ -314,8 +314,11 @@ img{display:block;max-width:100%}
 .ho-list a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px}
 .ho-list a:hover{color:var(--brand)}
 .ho-list code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
-.ho-list pre{margin:8px 0 4px;padding:10px 14px;background:var(--paper-sunk);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--ink-900);overflow-x:auto;white-space:pre}
-.ho-list pre code{background:transparent;border:none;padding:0;font-size:1em;color:inherit}
+.ho-ref{margin-left:8px;color:var(--ink-500);font-size:.88em}
+.ho-ref code{font-size:.95em}
+.ho-task-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ho-snippet{margin:0;padding:12px 14px;background:var(--paper-sunk);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;color:var(--ink-900);overflow:auto;white-space:pre;max-height:100%}
+.ho-snippet code{background:transparent;border:none;padding:0;font-size:1em;color:inherit;font-family:inherit}
 
 /* S19 — observation pile (situational) */
 #s19 .pile .obs .q{font-family:var(--font-latin);font-size:14px;color:var(--brand);font-weight:700;font-style:italic}
@@ -2062,20 +2065,23 @@ img{display:block;max-width:100%}
     <div class="ho-grid">
       <div class="ho-col reveal d2">
         <span class="col-label">Task</span>
-        <ol class="ho-list numbered">
-          <li>未完成Skillを読む<pre><code>---
+        <div class="ho-task-split">
+          <ol class="ho-list numbered">
+            <li>未完成Skillを読む<span class="ho-ref">(右の <code>SKILL.md</code>)</span></li>
+            <li><code>description</code> を改善する</li>
+            <li>出力フォーマットを固定する</li>
+            <li>禁止事項を書く</li>
+            <li>Slash command化するならどの粒度にするか決める</li>
+          </ol>
+          <pre class="ho-snippet" aria-label="未完成 SKILL.md"><code>---
 name: pr-summary
 description: PR説明を書く
 ---
 
 # PR Summary Skill
 
-PRの説明文を作ってください。</code></pre></li>
-          <li><code>description</code> を改善する</li>
-          <li>出力フォーマットを固定する</li>
-          <li>禁止事項を書く</li>
-          <li>Slash command化するならどの粒度にするか決める</li>
-        </ol>
+PRの説明文を作ってください。</code></pre>
+        </div>
       </div>
       <div class="ho-col reveal d3">
         <span class="col-label">Output</span>
