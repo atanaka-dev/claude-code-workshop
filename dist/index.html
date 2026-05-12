@@ -299,21 +299,21 @@ img{display:block;max-width:100%}
 #s16 .tbl tbody td:nth-child(3){font-family:var(--font-mono);font-size:12.5px;color:var(--brand-ink);font-weight:600}
 #s16 .tbl tbody td:nth-child(3) code{background:transparent;border:none;padding:0;color:inherit}
 
-/* S17 — Hands-on 1 (Goal / Task / Output) */
-#s17 .ho-goal{margin-top:14px;padding:14px 20px;background:var(--paper-card);border:1px solid var(--rule);border-left:3px solid var(--brand);border-radius:4px;color:var(--ink-900);font-size:14px;line-height:1.65;max-width:1100px;display:flex;align-items:baseline;gap:14px}
-#s17 .ho-goal-label{font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--brand);text-transform:uppercase;flex-shrink:0}
-#s17 .ho-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;margin-top:18px}
-#s17 .ho-col{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:18px 22px;position:relative}
-#s17 .ho-col::before{content:"";position:absolute;top:0;left:0;width:48px;height:3px;background:var(--brand)}
-#s17 .ho-col .col-label{display:block;font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--brand);text-transform:uppercase;margin-bottom:12px}
-#s17 .ho-list{margin:0;padding:0;list-style:none;counter-reset:ho}
-#s17 .ho-list li{position:relative;padding-left:28px;margin:7px 0;color:var(--ink-700);font-size:13.5px;line-height:1.65}
-#s17 .ho-list.numbered li{counter-increment:ho}
-#s17 .ho-list.numbered li::before{content:counter(ho,decimal-leading-zero);position:absolute;left:0;top:.05em;font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:800;color:var(--brand);font-size:13px;letter-spacing:.02em}
-#s17 .ho-list.bulleted li::before{content:"";position:absolute;left:6px;top:.7em;width:10px;height:1px;background:var(--brand)}
-#s17 .ho-list a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px}
-#s17 .ho-list a:hover{color:var(--brand)}
-#s17 .ho-list code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+/* Hands-on slides (Goal / Task / Output) — shared by S17, S35b, ... */
+.ho-goal{margin-top:14px;padding:14px 20px;background:var(--paper-card);border:1px solid var(--rule);border-left:3px solid var(--brand);border-radius:4px;color:var(--ink-900);font-size:16px;line-height:1.65;max-width:1100px;display:flex;align-items:baseline;gap:14px}
+.ho-goal-label{font-family:var(--font-latin);font-size:14px;font-weight:700;letter-spacing:.18em;color:var(--brand);text-transform:uppercase;flex-shrink:0}
+.ho-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;margin-top:18px}
+.ho-col{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:18px 22px;position:relative}
+.ho-col::before{content:"";position:absolute;top:0;left:0;width:48px;height:3px;background:var(--brand)}
+.ho-col .col-label{display:block;font-family:var(--font-latin);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--brand);text-transform:uppercase;margin-bottom:12px}
+.ho-list{margin:0;padding:0;list-style:none;counter-reset:ho}
+.ho-list li{position:relative;padding-left:28px;margin:10px 0;color:var(--ink-700);font-size:16px;line-height:1.65}
+.ho-list.numbered li{counter-increment:ho}
+.ho-list.numbered li::before{content:counter(ho,decimal-leading-zero);position:absolute;left:0;top:.05em;font-family:var(--font-latin);font-variant-numeric:tabular-nums;font-weight:800;color:var(--brand);font-size:14px;letter-spacing:.02em}
+.ho-list.bulleted li::before{content:"";position:absolute;left:6px;top:.7em;width:10px;height:1px;background:var(--brand)}
+.ho-list a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.ho-list a:hover{color:var(--brand)}
+.ho-list code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
 
 /* S19 — observation pile (situational) */
 #s19 .pile .obs .q{font-family:var(--font-latin);font-size:14px;color:var(--brand);font-weight:700;font-style:italic}
@@ -1654,11 +1654,41 @@ img{display:block;max-width:100%}
   </div>
 </section>
 
+<!-- Slide 35b — 第2部ハンズオン -->
+<section class="slide" id="s35b" data-section="Part 2 · Context Operation">
+  <div class="slide-inner" data-num="37">
+    <div class="kicker">Hands-on · Part 2</div>
+    <h2 class="title md">Hands-on 2: <em style="color:var(--brand);font-style:normal">コンテキスト運用テンプレートを作る</em></h2>
+    <p class="ho-goal reveal d1"><span class="ho-goal-label">Goal</span><span>長い会話を続けて壊すのではなく、節目で整理・退避・リセットできるようにする。</span></p>
+    <div class="ho-grid">
+      <div class="ho-col reveal d2">
+        <span class="col-label">Task</span>
+        <ol class="ho-list numbered">
+          <li>Claude Codeで崩れた会話を1つ思い出す</li>
+          <li>原因を分類する</li>
+          <li><code>/compact</code> テンプレートを作る</li>
+          <li><code>/clear</code> すべき条件を決める</li>
+          <li><code>docs/ai/handoff.md</code> の雛形を作る</li>
+        </ol>
+      </div>
+      <div class="ho-col reveal d3">
+        <span class="col-label">Output</span>
+        <ul class="ho-list bulleted">
+          <li><code>compact-template.md</code></li>
+          <li><code>docs/ai/current-state.md</code></li>
+          <li><code>docs/ai/handoff.md</code></li>
+          <li><code>clear-policy.md</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════════════════════════════════════════════════
      Slide 36 — Part 3 Divider
      ═══════════════════════════════════════════════════════════════ -->
 <section class="slide section-slide" id="s36" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="37">
+  <div class="slide-inner" data-num="38">
     <div class="section-grid">
       <div class="section-num tabular reveal">3</div>
       <div class="section-rail reveal d1"></div>
@@ -1674,7 +1704,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 37 — よくある状況 (limits) -->
 <section class="slide" id="s37" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="38">
+  <div class="slide-inner" data-num="39">
     <div class="kicker">Common Frustrations</div>
     <h2 class="title md">毎回の手作業やコピペは、<em style="color:var(--brand);font-style:normal">拡張機能へ逃がす候補</em>。</h2>
     <div class="pains">
@@ -1690,7 +1720,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 38 — 5つの限界 -->
 <section class="slide" id="s38" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="39">
+  <div class="slide-inner" data-num="40">
     <div class="kicker">Five limits of natural language</div>
     <h2 class="title md">自然言語指示の限界は<em style="color:var(--brand);font-style:normal">5種類に分解</em>できる。</h2>
     <div class="limits">
@@ -1705,7 +1735,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 39 — 拡張機能の地図 -->
 <section class="slide" id="s39" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="40">
+  <div class="slide-inner" data-num="41">
     <div class="kicker">Limit → Tool Map</div>
     <h2 class="title md">拡張機能は<em style="color:var(--brand);font-style:normal">「限界に対する逃がし先」</em>として理解する。</h2>
     <div class="map">
@@ -1721,7 +1751,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 40 — Skills -->
 <section class="slide" id="s40" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="41">
+  <div class="slide-inner" data-num="42">
     <div class="kicker">Skills</div>
     <h2 class="title md">Skillsは<em style="color:var(--brand);font-style:normal">毎回貼っている手順</em>を再利用可能な部品にする仕組み。</h2>
     <div class="skill-vis">
@@ -1747,7 +1777,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 41 — Skill品質 -->
 <section class="slide" id="s41" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="42">
+  <div class="slide-inner" data-num="43">
     <div class="kicker">Skill quality</div>
     <h2 class="title sm">Skillの品質は <code>description</code> と<em style="color:var(--brand);font-style:normal">運用</em>で決まる。</h2>
     <div class="split">
@@ -1778,7 +1808,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 42 — MCP -->
 <section class="slide" id="s42" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="43">
+  <div class="slide-inner" data-num="44">
     <div class="kicker">MCP</div>
     <h2 class="title sm">MCPは<em style="color:var(--brand);font-style:normal">外部ツール/データソースへの接続</em>をClaude Codeに渡す仕組み。</h2>
     <div class="topo">
@@ -1804,7 +1834,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 43 — MCPの注意点 -->
 <section class="slide" id="s43" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="44">
+  <div class="slide-inner" data-num="45">
     <div class="kicker">MCP risks</div>
     <h2 class="title md">外部接続は便利だが、<em style="color:var(--brand);font-style:normal">権限とPrompt Injection</em>のリスクを持ち込む。</h2>
     <div class="risk-grid">
@@ -1819,7 +1849,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 44 — Hooks -->
 <section class="slide" id="s44" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="45">
+  <div class="slide-inner" data-num="46">
     <div class="kicker">Hooks</div>
     <h2 class="title md">Hooksは「忘れずにやって」ではなく<em style="color:var(--brand);font-style:normal">「必ず実行する」</em>ための仕組み。</h2>
     <div class="hooks-vis">
@@ -1833,7 +1863,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 45 — Hooksにする / しない -->
 <section class="slide" id="s45" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="46">
+  <div class="slide-inner" data-num="47">
     <div class="kicker">Do / Don't</div>
     <h2 class="title md">Hooksは<em style="color:var(--brand);font-style:normal">機械的に判定できる重要処理</em>に限定する。</h2>
     <div class="ss">
@@ -1862,7 +1892,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 46 — Subagents -->
 <section class="slide" id="s46" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="47">
+  <div class="slide-inner" data-num="48">
     <div class="kicker">Subagents</div>
     <h2 class="title sm">Subagentsは<em style="color:var(--brand);font-style:normal">メイン会話を汚さず</em>に調査・レビューを任せる仕組み。</h2>
     <div class="sub-vis">
@@ -1893,7 +1923,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 47 — Plugins -->
 <section class="slide" id="s47" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="48">
+  <div class="slide-inner" data-num="49">
     <div class="kicker">Plugins</div>
     <h2 class="title sm">Pluginsは<em style="color:var(--brand);font-style:normal">個人の工夫</em>をチームの<em style="color:var(--brand);font-style:normal">標準ワークフロー</em>にする仕組み。</h2>
     <div class="plug-vis">
@@ -1917,7 +1947,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 48 — ワークフロー例：PR作成 -->
 <section class="slide" id="s48" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="49">
+  <div class="slide-inner" data-num="50">
     <div class="kicker">Workflow Example A · PR creation</div>
     <h2 class="title md">実務では、<em style="color:var(--brand);font-style:normal">複数の拡張機能を組み合わせて</em>ワークフローを作る。</h2>
     <div class="wf-flow">
@@ -1935,7 +1965,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 49 — ワークフロー例：障害調査 -->
 <section class="slide" id="s49" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="50">
+  <div class="slide-inner" data-num="51">
     <div class="kicker">Workflow Example B · Incident</div>
     <h2 class="title md">大量情報を扱う作業ほど、<em style="color:var(--brand);font-style:normal">外部接続とコンテキスト隔離</em>が効く。</h2>
     <div class="wf-flow">
@@ -1953,7 +1983,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 50 — 自動化の設計原則 -->
 <section class="slide" id="s50" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="51">
+  <div class="slide-inner" data-num="52">
     <div class="kicker">Automation principles</div>
     <h2 class="title md">全部AIに任せるのではなく、<em style="color:var(--brand);font-style:normal">壊れにくい小さな自動化</em>から始める。</h2>
     <div class="ds">
@@ -1967,7 +1997,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 51 — 第3部ワーク -->
 <section class="slide" id="s51" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="52">
+  <div class="slide-inner" data-num="53">
     <div class="kicker">Exercise — Part 3</div>
     <h2 class="title md">困りごとを、<em style="color:var(--brand);font-style:normal">適切な逃がし先に分類</em>する。</h2>
     <div class="cases six">
@@ -1983,7 +2013,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 51a — 答え合わせ -->
 <section class="slide" id="s51a" data-section="Part 3 · Externalization">
-  <div class="slide-inner" data-num="53">
+  <div class="slide-inner" data-num="54">
     <div class="kicker">Exercise — Part 3 — Answers</div>
     <h2 class="title md">困りごとは<em style="color:var(--brand);font-style:normal">機械的制御 / 自動化 / 外部接続 / 隔離 / 共有</em>に分ける。</h2>
     <div class="cases six">
@@ -2023,7 +2053,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 52 — 3章のつながり -->
 <section class="slide" id="s52" data-section="Closing">
-  <div class="slide-inner" data-num="54">
+  <div class="slide-inner" data-num="55">
     <div class="kicker">Bringing it together</div>
     <h2 class="title md">Claude Codeの設計は、情報を<em style="color:var(--brand);font-style:normal">入れる・整理する・外に出す</em>の3段階。</h2>
     <div class="arc">
@@ -2038,7 +2068,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 53 — 今日のまとめ -->
 <section class="slide" id="s53" data-section="Closing">
-  <div class="slide-inner" data-num="55">
+  <div class="slide-inner" data-num="56">
     <div class="kicker">Takeaways</div>
     <h2 class="title md">上手く使う人は、プロンプトだけでなく<em style="color:var(--brand);font-style:normal">「置き場所」と「寿命」</em>を設計している。</h2>
     <div class="final">
@@ -2067,7 +2097,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 54 — Closing -->
 <section class="slide" id="s54" data-section="Closing">
-  <div class="slide-inner" data-num="56">
+  <div class="slide-inner" data-num="57">
     <div class="kicker">Closing</div>
     <p class="closing-msg">良い使い方が見つかったら、<br><em>チームの知識に</em>。</p>
     <div class="closing-meta">
@@ -2080,7 +2110,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 55 — アンケートと配布資料 -->
 <section class="slide" id="s55" data-section="Closing">
-  <div class="slide-inner" data-num="57">
+  <div class="slide-inner" data-num="58">
     <div class="kicker">Survey &amp; Handout</div>
     <p class="thx">ご清聴ありがとうございました。</p>
     <div class="grid">
