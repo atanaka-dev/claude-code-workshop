@@ -314,6 +314,8 @@ img{display:block;max-width:100%}
 .ho-list a{color:var(--brand-ink);text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:1.5px;text-underline-offset:3px}
 .ho-list a:hover{color:var(--brand)}
 .ho-list code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.92em;color:var(--brand-ink)}
+.ho-list pre{margin:8px 0 4px;padding:10px 14px;background:var(--paper-sunk);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--ink-900);overflow-x:auto;white-space:pre}
+.ho-list pre code{background:transparent;border:none;padding:0;font-size:1em;color:inherit}
 
 /* S19 — observation pile (situational) */
 #s19 .pile .obs .q{font-family:var(--font-latin);font-size:14px;color:var(--brand);font-weight:700;font-style:italic}
@@ -2051,9 +2053,45 @@ img{display:block;max-width:100%}
   </div>
 </section>
 
+<!-- Slide 51b — 第3部ハンズオン -->
+<section class="slide" id="s51b" data-section="Part 3 · Externalization">
+  <div class="slide-inner" data-num="55">
+    <div class="kicker">Hands-on · Part 3</div>
+    <h2 class="title md">Hands-on 3: <em style="color:var(--brand);font-style:normal">Skillを実務用に改善する</em></h2>
+    <p class="ho-goal reveal d1"><span class="ho-goal-label">Goal</span><span>毎回貼っている手順を、再利用可能なSkillとして整える。</span></p>
+    <div class="ho-grid">
+      <div class="ho-col reveal d2">
+        <span class="col-label">Task</span>
+        <ol class="ho-list numbered">
+          <li>未完成Skillを読む<pre><code>---
+name: pr-summary
+description: PR説明を書く
+---
+
+# PR Summary Skill
+
+PRの説明文を作ってください。</code></pre></li>
+          <li><code>description</code> を改善する</li>
+          <li>出力フォーマットを固定する</li>
+          <li>禁止事項を書く</li>
+          <li>Slash command化するならどの粒度にするか決める</li>
+        </ol>
+      </div>
+      <div class="ho-col reveal d3">
+        <span class="col-label">Output</span>
+        <ul class="ho-list bulleted">
+          <li>改善済み <code>SKILL.md</code></li>
+          <li>Slash command案</li>
+          <li>MCPと組み合わせる場合の設計メモ</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Slide 52 — 3章のつながり -->
 <section class="slide" id="s52" data-section="Closing">
-  <div class="slide-inner" data-num="55">
+  <div class="slide-inner" data-num="56">
     <div class="kicker">Bringing it together</div>
     <h2 class="title md">Claude Codeの設計は、情報を<em style="color:var(--brand);font-style:normal">入れる・整理する・外に出す</em>の3段階。</h2>
     <div class="arc">
@@ -2068,7 +2106,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 53 — 今日のまとめ -->
 <section class="slide" id="s53" data-section="Closing">
-  <div class="slide-inner" data-num="56">
+  <div class="slide-inner" data-num="57">
     <div class="kicker">Takeaways</div>
     <h2 class="title md">上手く使う人は、プロンプトだけでなく<em style="color:var(--brand);font-style:normal">「置き場所」と「寿命」</em>を設計している。</h2>
     <div class="final">
@@ -2097,7 +2135,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 54 — Closing -->
 <section class="slide" id="s54" data-section="Closing">
-  <div class="slide-inner" data-num="57">
+  <div class="slide-inner" data-num="58">
     <div class="kicker">Closing</div>
     <p class="closing-msg">良い使い方が見つかったら、<br><em>チームの知識に</em>。</p>
     <div class="closing-meta">
@@ -2110,7 +2148,7 @@ img{display:block;max-width:100%}
 
 <!-- Slide 55 — アンケートと配布資料 -->
 <section class="slide" id="s55" data-section="Closing">
-  <div class="slide-inner" data-num="58">
+  <div class="slide-inner" data-num="59">
     <div class="kicker">Survey &amp; Handout</div>
     <p class="thx">ご清聴ありがとうございました。</p>
     <div class="grid">
