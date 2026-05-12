@@ -504,27 +504,38 @@ risk-table
 
 ---
 
-# Slide 17: 第1部ワーク
+# Slide 17: Hands-on 1: CLAUDE.mdを設計する
 
 ## Message
-自分のプロジェクトなら、どの情報をどこに置くか設計する。
+Claude Codeが毎回迷わず作業できるように、初期文脈・参照資料・機械的制御を分ける。
 
 ## Layout
-checklist
+hands-on
 
 ## Component
-checklist
+hands-on (Goal / Task / Output)
 
 ## Visual
-ワークの手順を3ステップで表示。
+Goalの帯を上に置き、Task(5項目)とOutput(3項目)を2カラムカードで並べる。
 
 ## Content
-1. 常時守らせたいルールを3つ書く
-2. 長い説明を`docs`参照に分ける
-3. 自然言語では弱い制御を洗い出す
+Goal:
+- Claude Codeが毎回迷わず作業できるように、初期文脈・参照資料・機械的制御を分ける。
+
+Task:
+1. [このリポジトリ](https://github.com/atanaka-dev/claude-code-workshop)の構成を確認する
+2. `CLAUDE.md` に置くべきルールを3つ選ぶ
+3. `rules/` に分けるべき領域別ルールを2つ作る
+4. `docs/ai/current-state.md` に逃がす情報を決める
+5. `settings.json` または Hook候補にすべき制御を1つ挙げる
+
+Output:
+- `CLAUDE.md` 改善案
+- `rules/*.md` 改善案
+- `docs/ai/current-state.md` 初版
 
 ## Speaker Notes
-ここでは完成度よりも分類が目的です。`CLAUDE.md`に入れる、`docs`に置く、`settings.json`やHooksに逃がす、の判断を体験してもらいます。
+ここでは完成度よりも分類が目的です。`CLAUDE.md`に置く、`rules/`に分ける、`docs/ai/`に逃がす、`settings.json`やHooksに逃がす、の判断を体験してもらいます。リポジトリの構成を出発点に、自分のプロジェクトに置き換える視点を持って帰ってもらいます。
 
 ## Source
 なし
@@ -1063,7 +1074,46 @@ checklist
 
 ---
 
-# Slide 36: 第3部：自然言語指示の限界をどう超えるか
+# Slide 36: Hands-on 2: コンテキスト運用テンプレートを作る
+
+## Message
+長い会話を続けて壊すのではなく、節目で整理・退避・リセットできるようにする。
+
+## Layout
+hands-on
+
+## Component
+hands-on (Goal / Task / Output)
+
+## Visual
+Goalの帯を上に置き、Task(5項目)とOutput(4項目)を2カラムカードで並べる。
+
+## Content
+Goal:
+- 長い会話を続けて壊すのではなく、節目で整理・退避・リセットできるようにする。
+
+Task:
+1. Claude Codeで崩れた会話を1つ思い出す
+2. 原因を分類する
+3. `/compact` テンプレートを作る
+4. `/clear` すべき条件を決める
+5. `docs/ai/handoff.md` の雛形を作る
+
+Output:
+- `compact-template.md`
+- `docs/ai/current-state.md`
+- `docs/ai/handoff.md`
+- `clear-policy.md`
+
+## Speaker Notes
+ここでは、会話が崩れた経験を「容量・品質・運用」の枠で分類し、`/compact`の文面、`/clear`の条件、`docs/ai/handoff.md` の雛形を1つずつ作ります。実装は完璧でなくてよく、節目で整理・退避・リセットできる手段を揃えることを目指します。
+
+## Source
+なし
+
+---
+
+# Slide 37: 第3部：自然言語指示の限界をどう超えるか
 
 ## Message
 自然言語だけで守れないものは、仕組みに逃がす。
@@ -1087,7 +1137,7 @@ section-divider
 
 ---
 
-# Slide 37: よくある状況
+# Slide 38: よくある状況
 
 ## Message
 毎回の手作業やコピペは、拡張機能へ逃がす候補。
@@ -1116,7 +1166,7 @@ checklist
 
 ---
 
-# Slide 38: 5つの限界
+# Slide 39: 5つの限界
 
 ## Message
 自然言語指示の限界は、5種類に分解できる。
@@ -1159,7 +1209,7 @@ kpi-cards
 
 ---
 
-# Slide 39: 拡張機能の地図
+# Slide 40: 拡張機能の地図
 
 ## Message
 拡張機能は「限界に対する逃がし先」として理解する。
@@ -1190,7 +1240,7 @@ risk-table
 
 ---
 
-# Slide 40: Skills
+# Slide 41: Skills
 
 ## Message
 Skillsは、毎回貼っている手順を再利用可能な部品にする仕組み。
@@ -1217,7 +1267,7 @@ message-slide
 
 ---
 
-# Slide 41: Skillの品質はdescriptionと運用で決まる
+# Slide 42: Skillの品質はdescriptionと運用で決まる
 
 ## Message
 `description`は「いつ使うか」まで書き、危険な実行は明示的に絞る。
@@ -1254,7 +1304,7 @@ Claudeはdescriptionを手がかりに自動利用を判断します。自動起
 
 ---
 
-# Slide 42: MCP
+# Slide 43: MCP
 
 ## Message
 MCPは、外部ツールやデータソースへの接続をClaude Codeに渡す仕組み。
@@ -1283,7 +1333,7 @@ Claude CodeからMCP Serverを介してGitHub/DB/社内ツールへつながる�
 
 ---
 
-# Slide 43: MCPの注意点
+# Slide 44: MCPの注意点
 
 ## Message
 外部接続は便利だが、権限とPrompt Injectionのリスクを持ち込む。
@@ -1314,7 +1364,7 @@ MCPは便利ですが、外部から来たテキストをモデルが読むこ�
 
 ---
 
-# Slide 44: Hooks
+# Slide 45: Hooks
 
 ## Message
 Hooksは「忘れずにやって」ではなく「必ず実行する」ための仕組み。
@@ -1343,7 +1393,7 @@ Claudeの判断を介さず、イベントで処理が走る図。
 
 ---
 
-# Slide 45: Hooksにするもの / しないもの
+# Slide 46: Hooksにするもの / しないもの
 
 ## Message
 Hooksは「機械的に判定できる重要処理」に限定する。
@@ -1380,7 +1430,7 @@ two-column
 
 ---
 
-# Slide 46: Subagents
+# Slide 47: Subagents
 
 ## Message
 Subagentsは、メイン会話を汚さずに調査・レビューを任せる仕組み。
@@ -1412,7 +1462,7 @@ Subagentsは「複雑な仕事を分担する」より前に、「メイン会�
 
 ---
 
-# Slide 47: Plugins
+# Slide 48: Plugins
 
 ## Message
 Pluginsは、個人の工夫をチームの標準ワークフローにする仕組み。
@@ -1449,7 +1499,7 @@ Plugin化は「チーム標準」にしてよいものだけ
 
 ---
 
-# Slide 48: ワークフロー例：PR作成
+# Slide 49: ワークフロー例：PR作成
 
 ## Message
 実務では、複数の拡張機能を組み合わせてワークフローを作る。
@@ -1479,7 +1529,7 @@ risk-table
 
 ---
 
-# Slide 49: ワークフロー例：障害調査
+# Slide 50: ワークフロー例：障害調査
 
 ## Message
 大量情報を扱う作業ほど、外部接続とコンテキスト隔離が効く。
@@ -1509,7 +1559,7 @@ risk-table
 
 ---
 
-# Slide 50: 自動化の設計原則
+# Slide 51: 自動化の設計原則
 
 ## Message
 全部AIに任せるのではなく、壊れにくい小さな自動化から始める。
@@ -1537,7 +1587,7 @@ kpi-cards
 
 ---
 
-# Slide 51: 第3部ワーク
+# Slide 52: 第3部ワーク
 
 ## Message
 困りごとを、適切な逃がし先に分類する。
@@ -1567,7 +1617,58 @@ checklist
 
 ---
 
-# Slide 52: 3章のつながり
+# Slide 53: Hands-on 3: Skillを実務用に改善する
+
+## Message
+毎回貼っている手順を、再利用可能なSkillとして整える。
+
+## Layout
+hands-on
+
+## Component
+hands-on (Goal / Task / Output + snippet)
+
+## Visual
+Goalの帯を上に置き、Taskカラムは「ol(5項目)」と「未完成SKILL.mdの<pre>」を横並びにする。OutputはTaskの右に1カラム。
+
+## Content
+Goal:
+- 毎回貼っている手順を、再利用可能なSkillとして整える。
+
+Task:
+1. 未完成Skillを読む(右の `SKILL.md`)
+2. `description` を改善する
+3. 出力フォーマットを固定する
+4. 禁止事項を書く
+5. Slash command化するならどの粒度にするか決める
+
+未完成 SKILL.md:
+
+```
+---
+name: pr-summary
+description: PR説明を書く
+---
+
+# PR Summary Skill
+
+PRの説明文を作ってください。
+```
+
+Output:
+- 改善済み `SKILL.md`
+- Slash command案
+- MCPと組み合わせる場合の設計メモ
+
+## Speaker Notes
+`description`は「いつ使うか」まで踏み込んで書き、出力フォーマットを固定し、禁止事項(機密情報を載せない、勝手にPRをopenしない、など)を明記します。Slash command化の粒度や、MCPで外部接続を足す場合の責務分担まで話せると、第3部の総合演習になります。
+
+## Source
+なし
+
+---
+
+# Slide 54: 3章のつながり
 
 ## Message
 Claude Codeの設計は、情報を「入れる」「整理する」「外に出す」の3段階。
@@ -1594,7 +1695,7 @@ process-flow
 
 ---
 
-# Slide 53: 今日のまとめ
+# Slide 55: 今日のまとめ
 
 ## Message
 上手く使う人は、プロンプトだけでなく「置き場所」と「寿命」を設計している。
@@ -1621,7 +1722,7 @@ checklist
 
 ---
 
-# Slide 54: Closing
+# Slide 56: Closing
 
 ## Message
 良い使い方が見つかったらチームの知識に
@@ -1648,7 +1749,7 @@ message-slide
 
 ---
 
-# Slide 55: アンケートと配布資料
+# Slide 57: アンケートと配布資料
 
 ## Message
 ご清聴ありがとうございました。
