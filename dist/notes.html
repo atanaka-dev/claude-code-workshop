@@ -279,7 +279,14 @@ Auto-expire: 2026-05-31
 <pre><code class="lang-yaml">description: キャンペーン終了後の週次KPIレポートを生成する。ユーザーが「週次」「KPI」「振り返り」「レポート」という語を含めたとき、月曜朝の定例MTG前の資料作成に使う。</code></pre>
 <p>Claudeは<code>description</code>を見てSkillを呼ぶか判断します。 自動起動させたいなら、用途・タイミング・キーワードを書きます。 勝手に呼ばれると困るなら、明示呼び出し専用にします。</p></div></details>
 <h2 id="mcp">MCP</h2>
+<p>MCPは、外部ツール/データソースへの接続をClaude Codeに渡す仕組みです。 Claude Code(main agent)を中心に、GitHub・DB・Logs・SaaS/社内ツールといったMCPサーバーが放射状に接続される構成をイメージすると分かりやすくなります。</p>
+<h3>MCPサーバーでできることの具体例</h3>
+<table><thead><tr><th>MCP</th><th>できることの例</th></tr></thead><tbody><tr><td>GitHub</td><td>関連Issue/PRの本文・コメントを取得 / CI失敗ログ・レビュー指摘を参照 / PRにレビューコメントを書き込む</td></tr><tr><td>DB</td><td>テーブル・カラム・インデックス情報を取得 / SELECTで本番データの現状値を確認 / read-only接続を推奨</td></tr><tr><td>Logs (Sentry / Datadog)</td><td>エラーを取得 / 該当時間帯のスタックトレースを参照 / 発生数・影響範囲を集計</td></tr><tr><td>SaaS / 社内ツール</td><td>Slackに障害・進捗を通知 / Notion / Confluenceの仕様書を参照 / Jiraチケットの起票・ステータス更新</td></tr></tbody></table>
+<h3>運用上の注意</h3>
 <table><thead><tr><th>用途</th><th>注意</th></tr></thead><tbody><tr><td>GitHub / DB / ログ / 社内ツール接続</td><td>読み取り専用から始める</td></tr><tr><td>外部情報の取得</td><td>Prompt Injectionを警戒</td></tr><tr><td>チーム共通接続</td><td><code>.mcp.json</code>をレビュー対象にする</td></tr><tr><td>認証ヘッダ</td><td>固定値ではなく動的取得を検討</td></tr></tbody></table>
+<h3>リスクと起こりうるインシデント</h3>
+<p>外部接続は便利ですが、権限とPrompt Injectionのリスクを持ち込みます。 リスクごとに「起こりうるインシデント」と「解決策」をセットで把握しておくと、対策の優先順位が付きやすくなります。</p>
+<table><thead><tr><th>Risk</th><th>起こりうるインシデント</th><th>解決策</th></tr></thead><tbody><tr><td>01. 書き込み権限が強い</td><td>未検証のSQLが本番DBに走り、レコードを破壊。エージェントが <code>git push --force</code> でmainを上書きする。</td><td>read-only接続から始める。書き込み系ツールは<code>allowedTools</code>で個別許可し、確認プロンプトを必須にする。</td></tr><tr><td>02. ツールが多すぎる</td><td>関係ない決済APIまで露出していて、誤って課金APIをcall。schemaが肥大化しモデルが誤ったツール選択をする。</td><td>必要なtoolだけ公開しschemaを絞る。タスク単位で<code>allowedTools</code>を限定する。</td></tr><tr><td>03. 未信頼テキスト</td><td>Issue本文に仕込まれた指示でリポジトリ内の<code>.env</code>を外部URLに送信。ログ中のpromptで権限昇格を試みる。</td><td>外部由来のテキストは「データ」として扱い、機密領域へのアクセスは別ツール側で人手承認に切る。</td></tr><tr><td>04. 認証情報が固定化</td><td>長寿命のAPIトークンを<code>.mcp.json</code>に直書きし、漏洩後も気付かず数ヶ月利用され続ける。</td><td><code>headersHelper</code>等で短命トークンを動的に取得。シークレットはsecret managerで集中管理する。</td></tr><tr><td>05. チーム共有設定</td><td>第三者MCPを含む<code>.mcp.json</code>のPRがそのままmerge。全員の環境で勝手に外部接続が有効になる。</td><td><code>.mcp.json</code>をコードレビュー対象に組み込み、Project/User scopeを分けて影響範囲を限定する。</td></tr></tbody></table>
 <details class="accordion"><summary>Project scopeとUser scope</summary><div class="accordion-body"><p>MCP設定は、個人だけに効くものと、プロジェクトに共有されるものを分けて考えます。</p>
 <ul><li>User scope: 個人用、実験的な接続、個人アカウントの認証</li><li>Project scope: チーム共有、コードレビュー対象、誰が使っても安全な権限</li></ul>
 <p>Project scopeの<code>.mcp.json</code>は、実質的に「Claudeに外部ツールを追加するコード」です。 レビュー対象にするのが自然です。</p></div></details>

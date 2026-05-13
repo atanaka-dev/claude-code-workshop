@@ -1310,15 +1310,28 @@ Claudeはdescriptionを手がかりに自動利用を判断します。自動起
 MCPは、外部ツールやデータソースへの接続をClaude Codeに渡す仕組み。
 
 ## Layout
-risk-table
+radial-topology
 
 ## Component
-risk-table
+radial-topology + notes-table
 
 ## Visual
-Claude CodeからMCP Serverを介してGitHub/DB/社内ツールへつながる図。
+中央にClaude Code(黒カード)、その左右にMCPサーバーカード(GitHub / DB / Logs / SaaS)を上下2段で配置し、Hubと各カードを点線で接続する放射状の図。Hubの左右に「MCP」のピル状ラベル。
 
 ## Content
+中央: `Claude Code` (main agent)
+
+周辺カード(各MCPサーバーで具体的にできること):
+
+| MCP | できることの例 |
+| --- | --- |
+| GitHub | 関連Issue/PRの本文・コメントを取得 / CI失敗ログ・レビュー指摘を参照 / PRにレビューコメントを書き込む |
+| DB | テーブル・カラム・インデックス情報を取得 / SELECTで本番データの現状値を確認 / read-only接続を推奨 |
+| Logs | Sentry / Datadogのエラーを取得 / 該当時間帯のスタックトレースを参照 / 発生数・影響範囲を集計 |
+| SaaS / 社内ツール | Slackに障害・進捗を通知 / Notion / Confluenceの仕様書を参照 / Jiraチケットの起票・ステータス更新 |
+
+下部の用途・注意テーブル:
+
 | 用途 | 注意 |
 | --- | --- |
 | GitHub / DB / ログ / 社内ツール接続 | 読み取り専用から始める |
@@ -1326,7 +1339,7 @@ Claude CodeからMCP Serverを介してGitHub/DB/社内ツールへつながる�
 | チーム共通接続 | `.mcp.json`をレビュー対象にする |
 
 ## Speaker Notes
-毎回ブラウザや外部ツールから情報をコピペしているならMCP候補です。ただし、権限が強いので読み取り専用から始めるのが安全です。
+毎回ブラウザや外部ツールから情報をコピペしているならMCP候補です。GitHubならIssue/PR本文の取得やCI結果の参照、DBならテーブル定義やSELECTでの現状確認、LogsならSentry/Datadogの障害情報、SaaSならSlack通知やNotion参照といった具体例があります。ただし権限が強いので、まずは読み取り専用から始めるのが安全です。
 
 ## Source
 なし
@@ -1339,25 +1352,25 @@ Claude CodeからMCP Serverを介してGitHub/DB/社内ツールへつながる�
 外部接続は便利だが、権限とPrompt Injectionのリスクを持ち込む。
 
 ## Layout
-risk-table
+risk-list-3col
 
 ## Component
-risk-table
+risk-list-3col
 
 ## Visual
-リスクと対策を2列で並べる。
+5件のリスクを縦に並べ、各行を「Risk(番号+見出し) / 起こりうるインシデント / 解決策(Mitigation)」の3カラム構成で列挙する。番号(01〜05)は右揃えで縦ラインを揃える。
 
 ## Content
-| リスク | 対策 |
-| --- | --- |
-| 書き込み権限が強い | 読み取り専用から始める |
-| ツールが多すぎる | スキーマを絞る |
-| 未信頼テキスト | Prompt Injectionを警戒 |
-| 認証情報が固定化 | `headersHelper`等で動的取得 |
-| チーム共有設定 | `.mcp.json`をレビュー対象にする |
+| Risk | 起こりうるインシデント | 解決策 |
+| --- | --- | --- |
+| 01. 書き込み権限が強い | 未検証のSQLが本番DBに走り、レコードを破壊。エージェントが `git push --force` でmainを上書きする。 | read-only接続から始める。書き込み系ツールは`allowedTools`で個別許可し、確認プロンプトを必須にする。 |
+| 02. ツールが多すぎる | 関係ない決済APIまで露出していて、誤って課金APIをcall。schemaが肥大化しモデルが誤ったツール選択をする。 | 必要なtoolだけ公開しschemaを絞る。タスク単位で`allowedTools`を限定する。 |
+| 03. 未信頼テキスト | Issue本文に仕込まれた指示でリポジトリ内の`.env`を外部URLに送信。ログ中のpromptで権限昇格を試みる。 | 外部由来のテキストは「データ」として扱い、機密領域へのアクセスは別ツール側で人手承認に切る。 |
+| 04. 認証情報が固定化 | 長寿命のAPIトークンを`.mcp.json`に直書きし、漏洩後も気付かず数ヶ月利用され続ける。 | `headersHelper`等で短命トークンを動的に取得。シークレットはsecret managerで集中管理する。 |
+| 05. チーム共有設定 | 第三者MCPを含む`.mcp.json`のPRがそのままmerge。全員の環境で勝手に外部接続が有効になる。 | `.mcp.json`をコードレビュー対象に組み込み、Project/User scopeを分けて影響範囲を限定する。 |
 
 ## Speaker Notes
-MCPは便利ですが、外部から来たテキストをモデルが読むことになります。Issue本文、ログ、DBの値などがプロンプトインジェクションの入口になり得ます。運用ではProject scopeとUser scopeを分けます。Project scopeの`.mcp.json`はチーム全員に効くためレビュー対象にし、最初は読み取り専用から始めます。認証ヘッダは固定値で置かず、`headersHelper`のような仕組みで都度取得する方が安全です。
+MCPは便利ですが、外部から来たテキストをモデルが読むことになります。Issue本文、ログ、DBの値などがプロンプトインジェクションの入口になり得ます。各リスクに対して具体的に起こりうるインシデントを想像しておくと、対策の優先順位がつきやすくなります。運用ではProject scopeとUser scopeを分けます。Project scopeの`.mcp.json`はチーム全員に効くためレビュー対象にし、最初は読み取り専用から始めます。認証ヘッダは固定値で置かず、`headersHelper`のような仕組みで都度取得する方が安全です。
 
 ## Source
 なし

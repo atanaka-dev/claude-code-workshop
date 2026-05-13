@@ -615,28 +615,37 @@ img{display:block;max-width:100%}
 #s41 .ops{background:var(--paper-ink);color:#f5f0e6;border-radius:6px;display:flex;flex-direction:column;gap:10px;padding:18px 22px}
 #s41 .ops li{padding-left:18px;position:relative;color:#d8d0bd;font-size:12.5px}
 
-/* S42 — MCP topology */
-#s42 .node.cc{background:var(--ink-900);color:#fff;border-color:var(--ink-900)}
-#s42 .node.cc .ttl{color:#fff}
-#s42 .node .ttl{font-family:var(--font-mono);font-size:14px;color:var(--brand-ink);font-weight:700}
-#s42 .node .sub{font-size:11px;color:var(--ink-400);margin-top:4px;letter-spacing:.06em}
-#s42 .node.cc .sub{color:#c4b9a5}
-#s42 .center{text-align:center;font-family:var(--font-latin);color:var(--ink-300);font-size:28px}
-#s42 .center small{display:block;font-size:10px;letter-spacing:.18em;color:var(--brand);font-weight:700;margin-top:6px}
-#s42 .ext{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-#s42 .ext .e .sub{display:block;font-family:var(--font-latin);font-size:10px;color:var(--ink-500);font-weight:400;letter-spacing:.04em;margin-top:4px}
-#s42 .notes-tbl{margin-top:24px}
-#s42 .topo{display:grid;grid-template-columns:200px 80px 1fr;align-items:center;margin-top:22px;gap:20px}
-#s42 .node{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;text-align:center;padding:18px 20px}
-#s42 .ext .e{background:var(--paper-sunk);border:1px solid var(--rule);border-radius:4px;font-family:var(--font-mono);color:var(--brand-ink);text-align:center;font-weight:600;line-height:1.4;padding:11px 10px;font-size:11.5px}
+/* S42 — MCP topology (radial) */
+#s42 .topo{display:grid;grid-template-columns:1fr 1.15fr 1fr;grid-template-rows:1fr 1fr;column-gap:34px;row-gap:14px;margin-top:10px;align-items:stretch}
+#s42 .hub{grid-column:2;grid-row:1 / span 2;background:var(--ink-900);color:#fff;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;text-align:center}
+#s42 .hub .brand{font-family:var(--font-mono);font-weight:700;font-size:22px;letter-spacing:.01em}
+#s42 .hub .hub-sub{color:#c4b9a5;font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-top:6px}
+#s42 .srv{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;padding:13px 16px;display:flex;flex-direction:column;gap:6px;position:relative}
+#s42 .srv .hd{display:flex;align-items:baseline;gap:10px;padding-bottom:5px;border-bottom:1px solid var(--rule)}
+#s42 .srv .hd h4{font-family:var(--font-mono);font-size:14px;color:var(--ink-900);font-weight:700;letter-spacing:.005em}
+#s42 .srv .hd .ico{font-family:var(--font-latin);font-size:9.5px;letter-spacing:.14em;background:var(--brand-tint);color:var(--brand-ink);border-radius:3px;padding:2px 7px;font-weight:700}
+#s42 .srv ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:3px}
+#s42 .srv li{color:var(--ink-700);font-size:11.5px;line-height:1.5;padding-left:11px;position:relative}
+#s42 .srv li::before{content:"·";position:absolute;left:3px;top:-2px;color:var(--brand);font-weight:700}
+#s42 .srv li code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 4px;border-radius:2px;font-size:.9em;color:var(--brand-ink)}
+#s42 .srv-tl::after,#s42 .srv-bl::after{content:"";position:absolute;right:-34px;top:50%;width:34px;height:1px;background:var(--brand);opacity:.65}
+#s42 .srv-tr::after,#s42 .srv-br::after{content:"";position:absolute;left:-34px;top:50%;width:34px;height:1px;background:var(--brand);opacity:.65}
+#s42 .notes-tbl{margin-top:10px}
 
-/* S43 — MCP risks */
-#s43 .rg .arrow{color:var(--brand);font-family:var(--font-latin);font-size:14px;text-align:center}
-#s43 .rg .fix code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.88em;color:var(--brand-ink)}
-#s43 .risk-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;gap:10px}
-#s43 .rg{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;border-left:3px solid var(--brand);display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;padding:14px 18px}
-#s43 .rg .risk{color:var(--ink-900);font-weight:600;letter-spacing:.005em;font-size:14px}
-#s43 .rg .fix{color:var(--ink-500);line-height:1.5;font-size:12.5px}
+/* S43 — MCP risks (risk / incident / fix) */
+#s43 .risk-grid{display:flex;flex-direction:column;margin-top:10px;gap:5px}
+#s43 .rg{background:var(--paper-card);border:1px solid var(--rule);border-radius:6px;border-left:3px solid var(--brand);display:grid;grid-template-columns:1.05fr 1.55fr 1.55fr;gap:18px;align-items:stretch;padding:12px 18px}
+#s43 .rg .col{display:flex;flex-direction:column;gap:4px;justify-content:center;padding-left:16px;border-left:1px dashed var(--rule)}
+#s43 .rg .risk-col{padding-left:0;border-left:none;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px}
+#s43 .rg .num{font-family:var(--font-latin);font-size:13px;letter-spacing:.08em;color:var(--brand);font-weight:700;font-variant-numeric:tabular-nums;min-width:22px;text-align:right;flex-shrink:0}
+#s43 .rg .risk-col h4{color:var(--ink-900);font-weight:700;font-size:14px;letter-spacing:.005em;line-height:1.35}
+#s43 .rg .lbl{font-family:var(--font-latin);text-transform:uppercase;letter-spacing:.16em;color:var(--ink-400);font-weight:700;font-size:9.5px}
+#s43 .rg .fix-col .lbl{color:var(--brand)}
+#s43 .rg .col p{font-size:12.5px;line-height:1.55;color:var(--ink-700)}
+#s43 .rg .col code{font-family:var(--font-mono);background:var(--paper-sunk);padding:1px 5px;border-radius:2px;font-size:.88em;color:var(--brand-ink)}
+#s43 .risk-head{display:grid;grid-template-columns:1.05fr 1.55fr 1.55fr;gap:18px;padding:0 18px;font-family:var(--font-latin);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-400);font-weight:700;margin-top:18px}
+#s43 .risk-head span:nth-child(2),#s43 .risk-head span:nth-child(3){padding-left:16px}
+#s43 .risk-head + .risk-grid{margin-top:6px}
 
 /* S44 — Hooks */
 #s44 .hook .ev{font-family:var(--font-mono);font-size:14px;color:#fff;background:var(--ink-900);padding:5px 12px;border-radius:3px;align-self:flex-start;font-weight:700;letter-spacing:.02em}
@@ -1817,13 +1826,41 @@ img{display:block;max-width:100%}
     <div class="kicker">MCP</div>
     <h2 class="title sm">MCPは<em style="color:var(--brand);font-style:normal">外部ツール/データソースへの接続</em>をClaude Codeに渡す仕組み。</h2>
     <div class="topo">
-      <div class="node cc"><div class="ttl">Claude Code</div><div class="sub">main agent</div></div>
-      <div class="center">⇄<small>MCP</small></div>
-      <div class="ext">
-        <div class="e">GitHub<span class="sub">Issue/PR</span></div>
-        <div class="e">DB<span class="sub">read-only</span></div>
-        <div class="e">Logs<span class="sub">Sentry等</span></div>
-        <div class="e">SaaS<span class="sub">社内ツール</span></div>
+      <div class="srv srv-tl reveal d1">
+        <div class="hd"><h4>GitHub</h4><span class="ico">MCP</span></div>
+        <ul>
+          <li>関連Issue/PRの本文・コメントを取得</li>
+          <li>CI失敗ログ・レビュー指摘を参照</li>
+          <li>PRにレビューコメントを書き込む</li>
+        </ul>
+      </div>
+      <div class="hub">
+        <div class="brand">Claude Code</div>
+        <div class="hub-sub">main agent</div>
+      </div>
+      <div class="srv srv-tr reveal d2">
+        <div class="hd"><h4>DB</h4><span class="ico">MCP</span></div>
+        <ul>
+          <li>テーブル・カラム・インデックス情報を取得</li>
+          <li>SELECTで本番データの現状値を確認</li>
+          <li>read-only接続を推奨</li>
+        </ul>
+      </div>
+      <div class="srv srv-bl reveal d3">
+        <div class="hd"><h4>Logs</h4><span class="ico">MCP</span></div>
+        <ul>
+          <li>Sentry / Datadogのエラーを取得</li>
+          <li>該当時間帯のスタックトレースを参照</li>
+          <li>発生数・影響範囲を集計</li>
+        </ul>
+      </div>
+      <div class="srv srv-br reveal d4">
+        <div class="hd"><h4>SaaS / 社内ツール</h4><span class="ico">MCP</span></div>
+        <ul>
+          <li>Slackに障害・進捗を通知</li>
+          <li>Notion / Confluenceの仕様書を参照</li>
+          <li>Jiraチケットの起票・ステータス更新</li>
+        </ul>
       </div>
     </div>
     <table class="tbl notes-tbl">
@@ -1843,11 +1880,31 @@ img{display:block;max-width:100%}
     <div class="kicker">MCP risks</div>
     <h2 class="title md">外部接続は便利だが、<em style="color:var(--brand);font-style:normal">権限とPrompt Injection</em>のリスクを持ち込む。</h2>
     <div class="risk-grid">
-      <div class="rg reveal d1"><div class="risk">書き込み権限が強い</div><div class="arrow">→</div><div class="fix">読み取り専用から始める</div></div>
-      <div class="rg reveal d2"><div class="risk">ツールが多すぎる</div><div class="arrow">→</div><div class="fix">スキーマを絞る</div></div>
-      <div class="rg reveal d3"><div class="risk">未信頼テキスト</div><div class="arrow">→</div><div class="fix">Prompt Injectionを警戒</div></div>
-      <div class="rg reveal d4"><div class="risk">認証情報が固定化</div><div class="arrow">→</div><div class="fix"><code>headersHelper</code>等で動的取得</div></div>
-      <div class="rg reveal d5"><div class="risk">チーム共有設定</div><div class="arrow">→</div><div class="fix"><code>.mcp.json</code>をレビュー対象にする</div></div>
+      <div class="rg reveal d1">
+        <div class="col risk-col"><span class="num">01</span><h4>書き込み権限が強い</h4></div>
+        <div class="col inc-col"><span class="lbl">Incident</span><p>未検証のSQLが本番DBに走り、レコードを破壊。エージェントが <code>git push --force</code> でmainを上書きする。</p></div>
+        <div class="col fix-col"><span class="lbl">Mitigation</span><p>read-only接続から始める。書き込み系ツールはAllowedToolsで個別許可し、確認プロンプトを必須にする。</p></div>
+      </div>
+      <div class="rg reveal d2">
+        <div class="col risk-col"><span class="num">02</span><h4>ツールが多すぎる</h4></div>
+        <div class="col inc-col"><span class="lbl">Incident</span><p>関係ない決済APIまで露出していて、誤って課金APIをcall。schemaが肥大化しモデルが誤ったツール選択をする。</p></div>
+        <div class="col fix-col"><span class="lbl">Mitigation</span><p>必要なtoolだけ公開しschemaを絞る。タスク単位で <code>allowedTools</code> を限定する。</p></div>
+      </div>
+      <div class="rg reveal d3">
+        <div class="col risk-col"><span class="num">03</span><h4>未信頼テキスト</h4></div>
+        <div class="col inc-col"><span class="lbl">Incident</span><p>Issue本文に仕込まれた指示でリポジトリ内の <code>.env</code> を外部URLに送信。ログ中のpromptで権限昇格を試みる。</p></div>
+        <div class="col fix-col"><span class="lbl">Mitigation</span><p>外部由来のテキストは「データ」として扱い、機密領域へのアクセスは別ツール側で人手承認に切る。</p></div>
+      </div>
+      <div class="rg reveal d4">
+        <div class="col risk-col"><span class="num">04</span><h4>認証情報が固定化</h4></div>
+        <div class="col inc-col"><span class="lbl">Incident</span><p>長寿命のAPIトークンを <code>.mcp.json</code> に直書きし、漏洩後も気付かず数ヶ月利用され続ける。</p></div>
+        <div class="col fix-col"><span class="lbl">Mitigation</span><p><code>headersHelper</code> 等で短命トークンを動的に取得。シークレットはsecret managerで集中管理する。</p></div>
+      </div>
+      <div class="rg reveal d5">
+        <div class="col risk-col"><span class="num">05</span><h4>チーム共有設定</h4></div>
+        <div class="col inc-col"><span class="lbl">Incident</span><p>第三者MCPを含む <code>.mcp.json</code> のPRがそのままmerge。全員の環境で勝手に外部接続が有効になる。</p></div>
+        <div class="col fix-col"><span class="lbl">Mitigation</span><p><code>.mcp.json</code> をコードレビュー対象に組み込み、Project/User scopeを分けて影響範囲を限定する。</p></div>
+      </div>
     </div>
   </div>
 </section>
