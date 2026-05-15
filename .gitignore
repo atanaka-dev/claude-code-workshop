@@ -26,6 +26,7 @@ npm-debug.log*
 # Secrets (also denied in .claude/settings.json)
 .env
 .env.*
+.claude/settings.local.json
 
 # OS / Editor
 .DS_Store
